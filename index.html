@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CYBERDUCK — tienda alternativa</title>
+  <meta name="description" content="Cyberduck: ropa alternativa, collares, faldas y figuras impresas en 3D. Estética neón sobre negro." />
+
+  <!-- DNS Prefetch y Preconnect para optimizar carga de APIs -->
+  <link rel="dns-prefetch" href="https://script.google.com">
+  <link rel="dns-prefetch" href="https://script.googleusercontent.com">
+  <link rel="preconnect" href="https://script.google.com" crossorigin>
+  <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+
+  <!-- Tipografías -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700;800&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./styles.css">
+</head>
+
+<body>
+  <script src="./script.js"></script>
+  <!-- HEADER -->
+  <header class="header">
+    <div class="container header__inner">
+      <div class="brand">
+        <a class="brand__logo-group" href="./index.html">
+          <img src="./imgs/logo.png" alt="Cyberduck logo" class="brand__img">
+          <div class="brand__logo">CYBERDUCK</div>
+        </a>
+        <nav class="nav" aria-label="navegación principal">
+          <a class="nav__link" href="./nuevo.html">¿qué hay de nuevo?</a>
+          <div class="nav__item nav__item--dropdown">
+            <a class="nav__link nav__link--parent" href="./ropa.html?cat=todos" aria-haspopup="true">ropa <span class="nav__chevron" aria-hidden="true"></span></a>
+            <div class="nav__dropdown" role="menu">
+              <a class="nav__dropdown-link" href="./ropa.html?cat=todos" role="menuitem">Todo</a>
+              <a class="nav__dropdown-link" href="./ropa.html?cat=camisetas" role="menuitem">Camisetas</a>
+              <a class="nav__dropdown-link" href="./ropa.html?cat=faldas" role="menuitem">Faldas</a>
+            </div>
+          </div>
+          <a class="nav__link" href="./accesorios.html">accesorios</a>
+          <div class="nav__item nav__item--dropdown">
+            <a class="nav__link nav__link--parent" href="./impresion3d.html?cat=todos" aria-haspopup="true">impresión 3D <span class="nav__chevron" aria-hidden="true"></span></a>
+            <div class="nav__dropdown" role="menu">
+              <a class="nav__dropdown-link" href="./impresion3d.html?cat=llaveros" role="menuitem">Llaveros</a>
+              <a class="nav__dropdown-link" href="./impresion3d.html?cat=figuras" role="menuitem">Figuras</a>
+              <a class="nav__dropdown-link" href="./impresion3d.html?cat=coleccion" role="menuitem">Colección</a>
+            </div>
+          </div>
+          <a class="nav__link" href="./media.html">media</a>
+          <a class="nav__link" href="./nosotros.html">nosotros</a>
+          <a class="nav__custom" href="./personalizar.html">✨ personaliza tu 3D ✨</a>
+        </nav>
+      </div>
+
+      <div class="header__actions">
+        <button class="iconbtn" type="button" aria-label="Idioma">ES</button>
+        <button class="iconbtn" type="button" aria-label="Buscar">⌕</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+
+      <!-- HERO / SLIDER -->
+      <section class="hero" aria-label="destacados">
+        <div class="slider" id="slider">
+          <!-- Slide 1 -->
+          <article class="slide is-active" data-slide>
+            <div class="slide__visual">
+              <div class="shot">
+                <div class="shot__inner" aria-hidden="true">
+                  <img src="./imgs/landing1.png" alt="Collares y piezas raras">
+                </div>
+              </div>
+            </div>
+
+            <div class="slide__content">
+              <p class="kicker">drop destacado</p>
+              <h1 class="headline">PERSONALIZA SIN LÍMITES</h1>
+              <p class="subhead">
+                Personalizamos cualquier tipo de producto con el personaje, estilo o idea que tengas en mente. Figuras 3D, llaveros, accesorios decorativos o piezas funcionales… si lo imaginas, lo diseñamos y lo imprimimos.
+              </p>
+              <div class="cta">
+                <a class="btn btn--primary" href="./personalizar.html">comprar ahora →</a>
+              </div>
+            </div>
+          </article>
+
+          <!-- Slide 2 -->
+          <article class="slide" data-slide>
+            <div class="slide__visual">
+              <div class="shot">
+                <div class="shot__inner" aria-hidden="true">
+                  <img src="./imgs/landing2.png" alt="Collares y piezas raras">
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div class="slide__content">
+              <p class="kicker">básicos</p>
+              <h2 class="headline">CAMISETAS, FALDAS Y MÁS</h2>
+              <p class="subhead">
+                Ropa con cortes limpios y detalles bien definidos. Negro profundo,
+                tipografía llamativa. Para todo tipo de gustos.
+              </p>
+              <div class="cta">
+                <a class="btn btn--primary" href="./ropa.html">ver ropa →</a>
+                <a class="btn" href="./accesorios.html">ver accesorios</a>
+              </div>
+            </div>
+          </article>
+
+          <!-- Slide 3 -->
+          <article class="slide" data-slide>
+            <div class="slide__visual">
+              <div class="shot">
+                <div class="shot__inner" aria-hidden="true">
+                  <img src="./imgs/landing3.png" alt="Collares y piezas raras">
+                </div>
+              </div>
+            </div>
+
+            <div class="slide__content">
+              <p class="kicker">accesorios</p>
+              <h2 class="headline">COLLARES Y PIEZAS RARAS</h2>
+              <p class="subhead">
+                Cadenas, dijes, pins y objetos para completar el look.
+                Si brilla y se ve ligeramente peligroso, probablemente está aquí.
+              </p>
+              <div class="cta">
+                <a class="btn btn--primary" href="./accesorios.html">comprar accesorios →</a>
+                
+              </div>
+            </div>
+          </article>
+
+          <!-- Controles -->
+          <div class="slider__controls" aria-label="controles del carrusel">
+            <button class="arrow" id="prev" type="button" aria-label="Anterior">←</button>
+
+            <div class="dots" id="dots" aria-label="Indicadores"></div>
+
+            <button class="arrow" id="next" type="button" aria-label="Siguiente">→</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- NUEVO -->
+      <section id="nuevo" class="section">
+        <div class="section__head">
+          <h2 class="section__title">¿qué hay de nuevo?</h2>
+          <a class="viewall" href="#">mostrar todo</a>
+        </div>
+        <div class="gallery">
+          
+        </div>
+      </section>
+
+      <!-- BLOQUES GRANDES (estilo gift card / comunidad) -->
+      <section class="section">
+        <div class="biggrid">
+          <article class="bigcard">
+            <div class="bigcard__visual">
+              <img src="./imgs/gift.png" alt="Tarjeta de regalo" class="bigcard__image">
+              <div class="bigcard__badge">gift</div>
+            </div>
+            <div class="bigcard__content">
+              <h3 class="bigcard__title">TARJETA DE REGALO</h3>
+              <p class="bigcard__text">Regala Cyberduck a tu combo. Rápido, fácil y sin equivocarte de talla.</p>
+              <button class="btn btn--primary" id="giftBuyBtn">comprar ahora</button>
+            </div>
+          </article>
+
+          <article class="bigcard">
+            <div class="bigcard__visual bigcard__visual--alt">
+              <img src="./imgs/community.png" alt="Comunidad" class="bigcard__image">
+              <div class="bigcard__badge chip--magenta">club</div>
+            </div>
+            <div class="bigcard__content">
+              <h3 class="bigcard__title">ÚNETE A LA COMUNIDAD</h3>
+              <p class="bigcard__text">Accede a drops exclusivos, preventas y descuentos secretos (shhh).</p>
+              <a class="btn btn--primary" href="https://chat.whatsapp.com/J3CRLJmEYqPH9h0WUYaA9p" target="_blank">entrar</a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- MODAL TARJETA DE REGALO -->
+  <div id="giftModal" class="modal" hidden>
+    <div class="modal__backdrop"></div>
+    <div class="modal__content">
+      <div class="modal__head">
+        <h3 class="modal__title">Tarjeta de Regalo</h3>
+        <button class="modal__close" id="giftModalClose" type="button" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modal__body">
+        <p>Indica el valor de la tarjeta de regalo (incluye un pequeño regalo sorpresa).</p>
+        <div class="form-group">
+          <label for="giftValue">Valor (COP):</label>
+          <input type="number" id="giftValue" min="10000" placeholder="Ej: 50000" class="input">
+        </div>
+      </div>
+      <div class="modal__foot">
+        <button class="btn" id="giftModalCancel">Cancelar</button>
+        <button class="btn btn--primary" id="giftModalAccept">Aceptar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container footer__grid">
+      <div>
+        <h3 class="footer__title">Cyberduck</h3>
+        <p class="footer__tiny">
+          Estética neón en negro, objetos alternativos y prints 3D.
+          Hecho con cariño y un poquito de electricidad.
+        </p>
+      </div>
+
+      <div>
+        <h3 class="footer__title">Info</h3>
+        <a class="footer__link" href="#">boletín</a>
+        <a class="footer__link" href="#">envíos</a>
+        <a class="footer__link" href="#">privacidad</a>
+      </div>
+
+      <div>
+        <h3 class="footer__title">Ayuda</h3>
+        <a class="footer__link" href="#">contáctanos</a>
+        <a class="footer__link" href="#">preguntas frecuentes</a>
+        <a class="footer__link" href="#">aviso legal</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Populate nuevo section with API data
+    (function(){
+      const nuevoSection = document.getElementById('nuevo');
+      const gallery = nuevoSection ? nuevoSection.querySelector('.gallery') : null;
+
+      if (gallery) {
+        // Fetch data from API
+        fetch('https://script.google.com/macros/s/AKfycby8QkrU25mFNgiP3eq0hKoDFOnBSLvybmAnrjX_m4ibdBAqXekiQNbMs1bZbvdOGRWL/exec')
+          .then(response => response.json())
+          .then(data => {
+            if (data.data && Array.isArray(data.data)) {
+              populateGallery(data.data);
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching data:', error);
+            // Fallback to static content if API fails
+          });
+      }
+
+      function populateGallery(products) {
+        gallery.innerHTML = ''; // Clear existing content
+
+        products.forEach(product => {
+          const item = document.createElement('article');
+          item.className = 'gallery__item';
+          item.style.cursor = 'pointer'; // Make it look clickable
+
+          // Add click event to navigate to product.html
+          item.addEventListener('click', () => {
+            // Store product data in localStorage
+            const priceValue = parseFloat(product.PRICE);
+            const productData = {
+              name: product.NAME || 'Producto',
+              price: !isNaN(priceValue) ? priceValue : null,
+              image: product.IMAGE || '',
+              desc: product.DESC || 'Descripción breve del producto.'
+            };
+            localStorage.setItem('cyberduck:selectedProduct', JSON.stringify(productData));
+            // Navigate to product.html
+            window.location.href = './product.html';
+          });
+
+          const imageDiv = document.createElement('div');
+          imageDiv.className = 'gallery__image';
+          if (product.IMAGE) {
+            const img = document.createElement('img');
+            img.src = product.IMAGE;
+            img.alt = product.NAME || 'Producto';
+            img.loading = 'lazy';
+            imageDiv.appendChild(img);
+          }
+
+          const metaDiv = document.createElement('div');
+          metaDiv.className = 'gallery__meta';
+
+          const nameP = document.createElement('p');
+          nameP.className = 'gallery__name';
+          nameP.textContent = product.NAME || 'Producto';
+
+          const priceP = document.createElement('p');
+          priceP.className = 'gallery__price';
+          priceP.textContent = product.PRICE ? `$${parseFloat(product.PRICE).toLocaleString('es-CO')} COP` : 'Precio no disponible';
+
+          metaDiv.appendChild(nameP);
+          metaDiv.appendChild(priceP);
+
+          item.appendChild(imageDiv);
+          item.appendChild(metaDiv);
+
+          gallery.appendChild(item);
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

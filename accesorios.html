@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accesorios — Cyberduck</title>
+  
+  <!-- DNS Prefetch y Preconnect para optimizar carga de APIs -->
+  <link rel="dns-prefetch" href="https://script.google.com">
+  <link rel="dns-prefetch" href="https://script.googleusercontent.com">
+  <link rel="preconnect" href="https://script.google.com" crossorigin>
+  <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&family=Oxanium:wght@700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+
+<body>
+<script src="./script.js"></script>
+  <!-- HEADER -->
+  <header class="header">
+    <div class="container header__inner">
+      <div class="brand">
+        <a class="brand__logo-group" href="./index.html">
+          <img src="./imgs/logo.png" alt="Cyberduck logo" class="brand__img">
+          <div class="brand__logo">CYBERDUCK</div>
+        </a>
+        <nav class="nav" aria-label="navegación principal">
+          <a class="nav__link" href="./nuevo.html">¿qué hay de nuevo?</a>
+          <div class="nav__item nav__item--dropdown">
+            <a class="nav__link nav__link--parent" href="./ropa.html?cat=todos" aria-haspopup="true">ropa <span class="nav__chevron" aria-hidden="true"></span></a>
+            <div class="nav__dropdown" role="menu">
+              <a class="nav__dropdown-link" href="./ropa.html?cat=todos" role="menuitem">Todo</a>
+              <a class="nav__dropdown-link" href="./ropa.html?cat=camisetas" role="menuitem">Camisetas</a>
+              <a class="nav__dropdown-link" href="./ropa.html?cat=faldas" role="menuitem">Faldas</a>
+            </div>
+          </div>
+          <a class="nav__link" href="./accesorios.html">accesorios</a>
+          <div class="nav__item nav__item--dropdown">
+            <a class="nav__link nav__link--parent" href="./impresion3d.html?cat=todos" aria-haspopup="true">impresión 3D <span class="nav__chevron" aria-hidden="true"></span></a>
+            <div class="nav__dropdown" role="menu">
+              <a class="nav__dropdown-link" href="./impresion3d.html?cat=llaveros" role="menuitem">Llaveros</a>
+              <a class="nav__dropdown-link" href="./impresion3d.html?cat=figuras" role="menuitem">Figuras</a>
+              <a class="nav__dropdown-link" href="./impresion3d.html?cat=coleccion" role="menuitem">Colección</a>
+            </div>
+          </div>
+          <a class="nav__link" href="./media.html">media</a>
+          <a class="nav__link" href="./nosotros.html">nosotros</a>
+          <a class="nav__custom" href="./personalizar.html">✨ personaliza tu 3D ✨</a>
+        </nav>
+      </div>
+
+      <div class="header__actions">
+        <button class="iconbtn" type="button" aria-label="Idioma">ES</button>
+        <button class="iconbtn" type="button" aria-label="Buscar">⌕</button>
+        <button class="iconbtn" type="button" aria-label="Carrito">🛒</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <section class="section section--accesorios">
+        <div class="section__head">
+          <h1 class="section__title" id="accesoriosTitle">Accesorios</h1>
+          <a class="viewall" href="./index.html">volver al inicio</a>
+        </div>
+
+        <div class="loading-indicator" id="loading-indicator">
+          <div class="loading-spinner"></div>
+          <p>Cargando productos...</p>
+        </div>
+
+        <div class="filter-tabs" id="filterTabs">
+          <button class="filter-tab" data-cat="todos">Todo</button>
+          <button class="filter-tab" data-cat="aretes">Aretes</button>
+          <button class="filter-tab" data-cat="collares">Collares</button>
+          <button class="filter-tab" data-cat="gargantillas">Gargantillas</button>
+          <button class="filter-tab" data-cat="manillas">Manillas</button>
+          <button class="filter-tab" data-cat="otros">Otros</button>
+        </div>
+        <div class="gallery" id="accesoriosGallery">
+          <!-- Gallery container: filled dynamically when selecting 'aretes' or 'otros',
+               or can contain static items for other categories. -->
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // Funciones para mostrar/ocultar loading
+    function showLoading() {
+      const indicator = document.getElementById('loading-indicator');
+      if (indicator) {
+        indicator.style.display = 'flex';
+      }
+    }
+
+    function hideLoading() {
+      const indicator = document.getElementById('loading-indicator');
+      if (indicator) {
+        indicator.style.display = 'none';
+      }
+    }
+
+    // Leer parámetro cat y filtrar items en accesorios
+    (function(){
+      const EARRINGS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw4zEM2NKmejtMMuiBLDdBEMIyIgtwfr1yHoPXxNBz7_mypqhTTX6tu85DFLGD4Cn_b/exec';
+      const OTHERS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzDPhkp_9XcrAeg67eek7l5ijVEu7LiWuwgSXR8CEcp1OJwi_vCzqH9bVH0oFI7JLgW/exec';
+      const COLLARES_SCRIPT_URL = 'https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLhGPGNmmLa8riYe4CS2khOSoGTVL7DEQ74nVmLsR-UYhEIfckSl1OMf2zROgO7Pk9OrRZMdX2tTmIOzrAkE89PlJIWLHdg4LmF5ABC6Umj2AlQ2Vxyj1ARtSg8PyBFrtT2ZPR9mlc_MN9kA1JepzEkRbABtVxfaKe8FheiklWy8zknXpFF-RcAW2nhuoHkrZ_po5njURSs2EkOJFcXVdF4ZeMaSPNy4r5yMy7UcET3mSYwFlE2JAbVFFYZHtirYZqa3p4YzdBY21pf--RSGJuXOEDH_zg&lib=M-YxSEsKo8g88BRj95yNKp5OjAoyKQGY4';
+      const MANILLAS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz4mKWXZ2NSQ_T2U6cFaLm9CvKLsHzvwJAd2-PSnvqIizSmjeiDgGC7A8vDCtXrfM0e/exec';
+      const GARGANTILLAS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOjIQtpaVbU8ymtev2cioDvUz6N255uDpsvAyHLf5PFNpBnLBqd4b6HAPKwHYuY72V/exec';
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const category = (urlParams.get('cat') || 'todos').toString().toLowerCase();
+      const titleEl = document.getElementById('accesoriosTitle');
+      if(titleEl){
+        if(category && category !== 'todos') titleEl.textContent = 'Accesorios — ' + category.charAt(0).toUpperCase() + category.slice(1);
+        else titleEl.textContent = 'Accesorios — Todo';
+      }
+
+      // Helper: attach click handlers to dynamically created items
+      function setupProductClickHandlers(scopeSelector = '#accesoriosGallery'){
+        const items = document.querySelectorAll(scopeSelector + ' .gallery__item');
+        items.forEach(item => {
+          item.style.cursor = 'pointer';
+          // avoid duplicate listeners
+          item.replaceWith(item.cloneNode(true));
+        });
+
+        const newItems = document.querySelectorAll(scopeSelector + ' .gallery__item');
+        newItems.forEach(item => {
+          item.addEventListener('click', () => {
+            const name = item.querySelector('.gallery__name')?.textContent || 'Producto';
+            const price = item.querySelector('.gallery__price')?.textContent || '';
+            const category = item.getAttribute('data-category') || '';
+            const imgDiv = item.querySelector('.gallery__image');
+            let image = '';
+            if (imgDiv) {
+              image = imgDiv.getAttribute('data-bg-image') || '';
+            }
+            const desc = item.querySelector('.gallery__desc')?.textContent || '';
+            const prod = { name, price, category, image, desc };
+            localStorage.setItem('cyberduck:selectedProduct', JSON.stringify(prod));
+            window.location.href = './product.html';
+          });
+        });
+      }
+
+      // Render items fetched from Google Sheets (optimizado)
+      function renderItemsFromSheet(rows){
+        const gallery = document.getElementById('accesoriosGallery');
+        if(!gallery) return;
+        if(!rows || !rows.length) return;
+        gallery.innerHTML = '';
+
+        const fragment = document.createDocumentFragment();
+
+        rows.forEach(row => {
+          const normalized = {};
+          Object.keys(row).forEach(k => { if(!k) return; normalized[k.trim().toLowerCase()] = row[k]; });
+
+          const name = normalized['name'] || normalized['nombre'] || normalized['title'] || 'Producto';
+          const price = (normalized['price'] || normalized['precio'] || '').toString().replace(/\./g, '').replace(',', '.');
+          const formattedPrice = parseFloat(price) ? parseFloat(price).toLocaleString('es-CO') : '';
+          const category = (normalized['category'] || normalized['categoria'] || '').toString().toLowerCase();
+          const image = (normalized['image'] || normalized['imagen'] || normalized['img'] || '').trim();
+          const desc = normalized['desc'] || normalized['descripcion'] || normalized['description'] || '';
+
+          const article = document.createElement('article');
+          article.className = 'gallery__item';
+          if(category) article.setAttribute('data-category', category);
+
+          // Usar lazy loading
+          const imageDiv = document.createElement('div');
+          imageDiv.className = 'gallery__image gallery__image--loading';
+          imageDiv.setAttribute('data-bg-image', image);
+
+          const metaDiv = document.createElement('div');
+          metaDiv.className = 'gallery__meta';
+          metaDiv.innerHTML = `
+            <p class="gallery__name">${name}</p>
+            <p class="gallery__price">${formattedPrice}</p>
+            <p class="gallery__category">${category ? category.charAt(0).toUpperCase() + category.slice(1) : ''}</p>
+            <p class="gallery__desc" style="display:none">${desc}</p>
+          `;
+
+          article.appendChild(imageDiv);
+          article.appendChild(metaDiv);
+          fragment.appendChild(article);
+        });
+
+        gallery.appendChild(fragment);
+        setupProductClickHandlers('#accesoriosGallery');
+        window.cyberduck.applyLazyLoading();
+        hideLoading();
+      }
+
+      // If category is 'aretes' or 'otros', fetch the corresponding Google Sheets script and render
+      if(category === 'aretes'){
+        showLoading();
+        window.cyberduck.cachedFetch(EARRINGS_SCRIPT_URL)
+          .then(json => {
+            if(json && Array.isArray(json.data) && json.data.length){
+              renderItemsFromSheet(json.data);
+            } else {
+              hideLoading();
+            }
+          })
+          .catch(err => { console.warn('No se pudo obtener datos de Aretes:', err); hideLoading(); });
+      } else if (category === 'collares'){
+        showLoading();
+        window.cyberduck.cachedFetch(COLLARES_SCRIPT_URL)
+          .then(json => {
+            if(json && Array.isArray(json.data) && json.data.length){
+              renderItemsFromSheet(json.data);
+            } else {
+              hideLoading();
+            }
+          })
+          .catch(err => { console.warn('No se pudo obtener datos de Collares:', err); hideLoading(); });
+      } else if (category === 'gargantillas'){
+        showLoading();
+        window.cyberduck.cachedFetch(GARGANTILLAS_SCRIPT_URL)
+          .then(json => {
+            if(json && Array.isArray(json.data) && json.data.length){
+              renderItemsFromSheet(json.data);
+            } else {
+              hideLoading();
+            }
+          })
+          .catch(err => { console.warn('No se pudo obtener datos de Gargantillas:', err); hideLoading(); });
+      } else if (category === 'manillas'){
+        showLoading();
+        window.cyberduck.cachedFetch(MANILLAS_SCRIPT_URL)
+          .then(json => {
+            if(json && Array.isArray(json.data) && json.data.length){
+              renderItemsFromSheet(json.data);
+            } else {
+              hideLoading();
+            }
+          })
+          .catch(err => { console.warn('No se pudo obtener datos de Manillas:', err); hideLoading(); });
+      } else if (category === 'otros'){
+        showLoading();
+        window.cyberduck.cachedFetch(OTHERS_SCRIPT_URL)
+          .then(json => {
+            if(json && Array.isArray(json.data) && json.data.length){
+              renderItemsFromSheet(json.data);
+            } else {
+              hideLoading();
+            }
+          })
+          .catch(err => { console.warn('No se pudo obtener datos de Otros:', err); hideLoading(); });
+      } else if (category === 'todos'){
+        showLoading();
+        // Fetch all categories and combine them (optimizado en paralelo)
+        const allScripts = [
+          window.cyberduck.cachedFetch(EARRINGS_SCRIPT_URL),
+          window.cyberduck.cachedFetch(COLLARES_SCRIPT_URL),
+          window.cyberduck.cachedFetch(GARGANTILLAS_SCRIPT_URL),
+          window.cyberduck.cachedFetch(MANILLAS_SCRIPT_URL),
+          window.cyberduck.cachedFetch(OTHERS_SCRIPT_URL)
+        ];
+        Promise.all(allScripts)
+          .then(results => {
+            const allItems = [];
+            results.forEach(json => {
+              if(json && Array.isArray(json.data) && json.data.length){
+                allItems.push(...json.data);
+              }
+            });
+            if(allItems.length){
+              // Mezclar los items para mostrar surtido
+              function shuffleArray(arr){
+                for(let i = arr.length - 1; i > 0; i--) {
+                  const j = Math.floor(Math.random() * (i + 1));
+                  const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+                }
+              }
+              shuffleArray(allItems);
+        renderItemsFromSheet(allItems);
+        // Apply lazy loading after rendering
+        setTimeout(() => {
+          window.cyberduck.applyLazyLoading('#accesoriosGallery .gallery__image');
+        }, 100);
+            } else {
+              hideLoading();
+            }
+          })
+          .catch(err => { console.warn('Error al obtener datos de accesorios:', err); hideLoading(); });
+      } else {
+        // Apply simple client-side filter for static items
+        const items = document.querySelectorAll('#accesoriosGallery .gallery__item');
+        items.forEach(item => {
+          const itemCat = item.getAttribute('data-category') || '';
+          if (category === itemCat) item.style.display = 'flex'; else item.style.display = 'none';
+        });
+        setupProductClickHandlers('#accesoriosGallery');
+      }
+
+      // Tabs behavior
+      const tabs = document.querySelectorAll('#filterTabs .filter-tab');
+      tabs.forEach(tab => {
+        const tabCat = tab.getAttribute('data-cat');
+        if (tabCat === category) tab.classList.add('is-active'); else tab.classList.remove('is-active');
+        tab.addEventListener('click', () => { window.location.href = `./accesorios.html?cat=${tabCat}`; });
+      });
+    })();
+  </script>
+
+</body>
+</html>

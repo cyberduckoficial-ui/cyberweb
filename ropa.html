@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ropa — Cyberduck</title>
+  
+  <!-- DNS Prefetch y Preconnect para optimizar carga de APIs -->
+  <link rel="dns-prefetch" href="https://script.google.com">
+  <link rel="preconnect" href="https://script.google.com" crossorigin>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&family=Oxanium:wght@700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+
+<body>
+  <script src="./script.js"></script>
+  <!-- HEADER -->
+  <header class="header">
+    <div class="container header__inner">
+      <div class="brand">
+        <a class="brand__logo-group" href="./index.html">
+          <img src="./imgs/logo.png" alt="Cyberduck logo" class="brand__img">
+          <div class="brand__logo">CYBERDUCK</div>
+        </a>
+        <nav class="nav" aria-label="navegación principal">
+          <a class="nav__link" href="./nuevo.html">¿qué hay de nuevo?</a>
+          <div class="nav__item nav__item--dropdown">
+            <a class="nav__link nav__link--parent" href="./ropa.html?cat=todos" aria-haspopup="true">ropa <span class="nav__chevron" aria-hidden="true"></span></a>
+            <div class="nav__dropdown" role="menu">
+              <a class="nav__dropdown-link" href="./ropa.html?cat=todos" role="menuitem">Todo</a>
+              <a class="nav__dropdown-link" href="./ropa.html?cat=camisetas" role="menuitem">Camisetas</a>
+              <a class="nav__dropdown-link" href="./ropa.html?cat=faldas" role="menuitem">Faldas</a>
+            </div>
+          </div>
+          <a class="nav__link" href="./accesorios.html">accesorios</a>
+          <div class="nav__item nav__item--dropdown">
+            <a class="nav__link nav__link--parent" href="./impresion3d.html?cat=todos" aria-haspopup="true">impresión 3D <span class="nav__chevron" aria-hidden="true"></span></a>
+            <div class="nav__dropdown" role="menu">
+              <a class="nav__dropdown-link" href="./impresion3d.html?cat=llaveros" role="menuitem">Llaveros</a>
+              <a class="nav__dropdown-link" href="./impresion3d.html?cat=figuras" role="menuitem">Figuras</a>
+              <a class="nav__dropdown-link" href="./impresion3d.html?cat=coleccion" role="menuitem">Colección</a>
+            </div>
+          </div>
+          <a class="nav__link" href="./media.html">media</a>
+          <a class="nav__link" href="./nosotros.html">nosotros</a>
+          <a class="nav__custom" href="./personalizar.html">✨ personaliza tu 3D ✨</a>
+        </nav>
+      </div>
+
+      <div class="header__actions">
+        <button class="iconbtn" type="button" aria-label="Idioma">ES</button>
+        <button class="iconbtn" type="button" aria-label="Buscar">⌕</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <section class="section section--ropa">
+        <div class="section__head">
+          <h1 class="section__title" id="ropaTitle">Ropa</h1>
+          <a class="viewall" href="./index.html">volver al inicio</a>
+        </div>
+
+        <div class="loading-indicator" id="loading-indicator">
+          <div class="loading-spinner"></div>
+          <p>Cargando productos...</p>
+        </div>
+
+        <div class="filter-tabs" id="filterTabs">
+          <button class="filter-tab" data-cat="todos">Todo</button>
+          <button class="filter-tab" data-cat="camisetas">Camisetas</button>
+          <button class="filter-tab" data-cat="faldas">Faldas</button>
+        </div>
+
+        <div class="gallery" id="ropaGallery">
+          <!-- Productos Todos/Hombre -->
+
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // Funciones para mostrar/ocultar loading
+    function showLoading() {
+      const indicator = document.getElementById('loading-indicator');
+      if (indicator) {
+        indicator.style.display = 'flex';
+      }
+    }
+
+    function hideLoading() {
+      const indicator = document.getElementById('loading-indicator');
+      if (indicator) {
+        indicator.style.display = 'none';
+      }
+    }
+
+    // Obtener parámetro cat de URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const category = urlParams.get('cat') || 'todos';
+
+    // Actualizar título
+    const titleEl = document.getElementById('ropaTitle');
+    if (category === 'camisetas') {
+      titleEl.textContent = 'Ropa — Camisetas';
+    } else if (category === 'faldas') {
+      titleEl.textContent = 'Ropa — Faldas';
+    } else {
+      titleEl.textContent = 'Ropa — Todo';
+    }
+
+    // Función para cargar camisetas desde el script (optimizada)
+    async function loadCamisetas() {
+      showLoading();
+      try {
+        const data = await window.cyberduck.cachedFetch('https://script.google.com/macros/s/AKfycbzlEH33cVRdLmR3cI17bZi7k81OyucZnhqQ7WAPhJcigixl12fpYH03xMfvL77gGl9x/exec');
+        const gallery = document.getElementById('ropaGallery');
+        let items = data;
+        if (!Array.isArray(data)) {
+          items = data.data || data.items || data.camisetas || [];
+        }
+        
+        // Fragment para mejor rendimiento
+        const fragment = document.createDocumentFragment();
+        
+        items.forEach(item => {
+          const article = document.createElement('article');
+          article.className = 'gallery__item';
+          article.setAttribute('data-category', 'camisetas');
+          
+          // Lazy loading: usar data-bg-image en lugar de aplicar directamente
+          const imageDiv = document.createElement('div');
+          imageDiv.className = 'gallery__image gallery__image--loading';
+          imageDiv.setAttribute('data-bg-image', item.IMAGE);
+          
+          const metaDiv = document.createElement('div');
+          metaDiv.className = 'gallery__meta';
+          metaDiv.innerHTML = `
+            <p class="gallery__name">${item.NAME || item.name}</p>
+            <p class="gallery__price">${(parseFloat((item.PRICE || item.price).toString().replace(/\./g, '').replace(',', '.')) || 0).toLocaleString('es-CO')}</p>
+            <p class="gallery__category">Camisetas</p>
+          `;
+          
+          article.appendChild(imageDiv);
+          article.appendChild(metaDiv);
+          article.style.cursor = 'pointer';
+          
+          article.addEventListener('click', () => {
+            const name = item.NAME || item.name;
+            const price = item.PRICE || item.price;
+            const category = 'camisetas';
+            const image = item.IMAGE;
+            const desc = item.DESCRIPTION || '';
+            const prod = { name, price, category, image, desc };
+            localStorage.setItem('cyberduck:selectedProduct', JSON.stringify(prod));
+            window.location.href = './product.html';
+          });
+          
+          fragment.appendChild(article);
+        });
+        
+        gallery.appendChild(fragment);
+        
+        // Aplicar lazy loading después de agregar elementos
+        setTimeout(() => window.cyberduck.applyLazyLoading(), 100);
+      } catch (error) {
+        console.error('Error loading camisetas:', error);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // Función para cargar faldas desde el script (optimizada)
+    async function loadFaldas() {
+      showLoading();
+      try {
+        const data = await window.cyberduck.cachedFetch('https://script.google.com/macros/s/AKfycbxi7qSdxN6ZQdzVYTzAHlfGwkjqmll0ldqGspbxFb8T4GstfDK0MasUNflQUymsbOri/exec');
+        const gallery = document.getElementById('ropaGallery');
+        let items = data;
+        if (!Array.isArray(data)) {
+          items = data.data || data.items || data.faldas || [];
+        }
+        
+        const fragment = document.createDocumentFragment();
+        
+        items.forEach(item => {
+          const article = document.createElement('article');
+          article.className = 'gallery__item';
+          article.setAttribute('data-category', 'faldas');
+          
+          const imageDiv = document.createElement('div');
+          imageDiv.className = 'gallery__image gallery__image--loading';
+          imageDiv.setAttribute('data-bg-image', item.IMAGE);
+          
+          const metaDiv = document.createElement('div');
+          metaDiv.className = 'gallery__meta';
+          metaDiv.innerHTML = `
+            <p class="gallery__name">${item.NAME || item.name}</p>
+            <p class="gallery__price">${item.PRICE || item.price}</p>
+            <p class="gallery__category">Faldas</p>
+          `;
+          
+          article.appendChild(imageDiv);
+          article.appendChild(metaDiv);
+          article.style.cursor = 'pointer';
+          
+          article.addEventListener('click', () => {
+            const name = item.NAME || item.name;
+            const price = item.PRICE || item.price;
+            const category = 'faldas';
+            const image = item.IMAGE;
+            const desc = item.DESCRIPTION || '';
+            const prod = { name, price, category, image, desc };
+            localStorage.setItem('cyberduck:selectedProduct', JSON.stringify(prod));
+            window.location.href = './product.html';
+          });
+          
+          fragment.appendChild(article);
+        });
+        
+        gallery.appendChild(fragment);
+        setTimeout(() => window.cyberduck.applyLazyLoading(), 100);
+      } catch (error) {
+        console.error('Error loading faldas:', error);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // Función para mezclar array
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    // Cargar productos surtidos para "todos" (optimizado con Promise.all)
+    async function loadTodos() {
+      showLoading();
+      const gallery = document.getElementById('ropaGallery');
+      const allItems = [];
+
+      try {
+        // Cargar ambos en paralelo para mejor rendimiento
+        const [camisetasData, faldasData] = await Promise.all([
+          window.cyberduck.cachedFetch('https://script.google.com/macros/s/AKfycbzlEH33cVRdLmR3cI17bZi7k81OyucZnhqQ7WAPhJcigixl12fpYH03xMfvL77gGl9x/exec'),
+          window.cyberduck.cachedFetch('https://script.google.com/macros/s/AKfycbxi7qSdxN6ZQdzVYTzAHlfGwkjqmll0ldqGspbxFb8T4GstfDK0MasUNflQUymsbOri/exec')
+        ]);
+
+        // Procesar camisetas
+        let camisetasItems = camisetasData;
+        if (!Array.isArray(camisetasData)) {
+          camisetasItems = camisetasData.data || camisetasData.items || camisetasData.camisetas || [];
+        }
+        camisetasItems.forEach(item => {
+          allItems.push({ ...item, category: 'camisetas' });
+        });
+
+        // Procesar faldas
+        let faldasItems = faldasData;
+        if (!Array.isArray(faldasData)) {
+          faldasItems = faldasData.data || faldasData.items || faldasData.faldas || [];
+        }
+        faldasItems.forEach(item => {
+          allItems.push({ ...item, category: 'faldas' });
+        });
+      } catch (error) {
+        console.error('Error loading products:', error);
+      }
+
+      // Mezclar los productos
+      const shuffledItems = shuffleArray(allItems);
+      const fragment = document.createDocumentFragment();
+
+      // Renderizar productos mezclados
+      shuffledItems.forEach(item => {
+        const article = document.createElement('article');
+        article.className = 'gallery__item';
+        article.setAttribute('data-category', item.category);
+        
+        const imageDiv = document.createElement('div');
+        imageDiv.className = 'gallery__image gallery__image--loading';
+        imageDiv.setAttribute('data-bg-image', item.IMAGE);
+        
+        const metaDiv = document.createElement('div');
+        metaDiv.className = 'gallery__meta';
+        metaDiv.innerHTML = `
+          <p class="gallery__name">${item.NAME || item.name}</p>
+          <p class="gallery__price">${(parseFloat((item.PRICE || item.price).toString().replace(/\./g, '').replace(',', '.')) || 0).toLocaleString('es-CO')}</p>
+          <p class="gallery__category">${item.category === 'camisetas' ? 'Camisetas' : 'Faldas'}</p>
+        `;
+        
+        article.appendChild(imageDiv);
+        article.appendChild(metaDiv);
+        article.style.cursor = 'pointer';
+        
+        article.addEventListener('click', () => {
+          const name = item.NAME || item.name;
+          const price = item.PRICE || item.price;
+          const category = item.category;
+          const image = item.IMAGE;
+          const desc = item.DESCRIPTION || '';
+          const prod = { name, price, category, image, desc };
+          localStorage.setItem('cyberduck:selectedProduct', JSON.stringify(prod));
+          window.location.href = './product.html';
+        });
+        
+        fragment.appendChild(article);
+      });
+
+      gallery.appendChild(fragment);
+      setTimeout(() => window.cyberduck.applyLazyLoading(), 100);
+      hideLoading();
+    }
+
+    // Cargar camisetas si es necesario
+    if (category === 'camisetas') {
+      loadCamisetas();
+    }
+
+    // Cargar faldas si es necesario
+    if (category === 'faldas') {
+      loadFaldas();
+    }
+
+    // Cargar productos surtidos para "todos"
+    if (category === 'todos') {
+      loadTodos();
+    }
+
+    // Filtrar productos
+    const items = document.querySelectorAll('.gallery__item');
+    items.forEach(item => {
+      const itemCat = item.getAttribute('data-category');
+      if (category === 'todos' || category === itemCat) {
+        item.style.display = 'flex';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+
+    // Marcar tab activo
+    const tabs = document.querySelectorAll('.filter-tab');
+    tabs.forEach(tab => {
+      const tabCat = tab.getAttribute('data-cat');
+      if (tabCat === category) {
+        tab.classList.add('is-active');
+      } else {
+        tab.classList.remove('is-active');
+      }
+
+      // Click handler para cambiar filtro
+      tab.addEventListener('click', () => {
+        window.location.href = `./ropa.html?cat=${tabCat}`;
+      });
+    });
+
+    // Hacer que cada producto abra product.html guardando datos en localStorage
+    const ropaItems = document.querySelectorAll('.gallery__item');
+    ropaItems.forEach(item => {
+      item.style.cursor = 'pointer';
+      item.addEventListener('click', () => {
+        const name = item.querySelector('.gallery__name')?.textContent || 'Producto';
+        const price = item.querySelector('.gallery__price')?.textContent || '';
+        const category = item.getAttribute('data-category') || '';
+        const imgDiv = item.querySelector('.gallery__image');
+        let image = '';
+        if (imgDiv) {
+          const bg = getComputedStyle(imgDiv).backgroundImage;
+          image = (bg && bg !== 'none') ? bg : '';
+        }
+
+        const prod = { name, price, category, image, desc: '' };
+        localStorage.setItem('cyberduck:selectedProduct', JSON.stringify(prod));
+        window.location.href = './product.html';
+      });
+    });
+  </script>
+  
+</body>
+</html>

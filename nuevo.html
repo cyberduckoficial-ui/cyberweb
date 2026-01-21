@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>¿Qué hay de nuevo? — Cyberduck</title>
+  <meta name="description" content="Novedades de Cyberduck: ropa, accesorios y figuras 3D con estética neón." />
+  
+  <!-- DNS Prefetch y Preconnect para optimizar carga de APIs -->
+  <link rel="dns-prefetch" href="https://script.google.com">
+  <link rel="preconnect" href="https://script.google.com" crossorigin>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700;800&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <script src="./script.js"></script>
+  <header class="header">
+    <div class="container header__inner">
+      <div class="brand">
+        <a class="brand__logo-group" href="./index.html">
+          <img src="./imgs/logo.png" alt="Cyberduck logo" class="brand__img">
+          <div class="brand__logo">CYBERDUCK</div>
+        </a>
+        <nav class="nav" aria-label="navegación principal">
+          <a class="nav__link" href="./nuevo.html">¿qué hay de nuevo?</a>
+          <div class="nav__item nav__item--dropdown">
+            <a class="nav__link nav__link--parent" href="./ropa.html?cat=todos" aria-haspopup="true">ropa <span class="nav__chevron" aria-hidden="true"></span></a>
+            <div class="nav__dropdown" role="menu">
+              <a class="nav__dropdown-link" href="./ropa.html?cat=todos" role="menuitem">Todo</a>
+              <a class="nav__dropdown-link" href="./ropa.html?cat=camisetas" role="menuitem">Camisetas</a>
+              <a class="nav__dropdown-link" href="./ropa.html?cat=faldas" role="menuitem">Faldas</a>
+            </div>
+          </div>
+          <a class="nav__link" href="./accesorios.html">accesorios</a>
+          <div class="nav__item nav__item--dropdown">
+            <a class="nav__link nav__link--parent" href="./impresion3d.html?cat=todos" aria-haspopup="true">impresión 3D <span class="nav__chevron" aria-hidden="true"></span></a>
+            <div class="nav__dropdown" role="menu">
+              <a class="nav__dropdown-link" href="./impresion3d.html?cat=llaveros" role="menuitem">Llaveros</a>
+              <a class="nav__dropdown-link" href="./impresion3d.html?cat=figuras" role="menuitem">Figuras</a>
+              <a class="nav__dropdown-link" href="./impresion3d.html?cat=coleccion" role="menuitem">Colección</a>
+            </div>
+          </div>
+          <a class="nav__link" href="./media.html">media</a>
+          <a class="nav__link" href="./nosotros.html">nosotros</a>
+          <a class="nav__custom" href="./personalizar.html">✨ personaliza tu 3D ✨</a>
+        </nav>
+      </div>
+
+      <div class="header__actions">
+        <button class="iconbtn" type="button" aria-label="Idioma">ES</button>
+        <button class="iconbtn" type="button" aria-label="Buscar">⌕</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <section class="section section--nuevo">
+        <div class="section__head">
+          <h1 class="section__title">¿qué hay de nuevo?</h1>
+          <a class="viewall" href="./index.html">volver al inicio</a>
+        </div>
+
+        <div class="loading-indicator" id="loading-indicator">
+          <div class="loading-spinner"></div>
+          <p>Cargando productos...</p>
+        </div>
+        <div class="gallery">
+          </article>
+        </div>
+      </section>
+    </div>
+  </main>
+  <script>
+    // Loading indicator for nuevo section (optimizado)
+    (function(){
+      const loadingIndicator = document.getElementById('loading-indicator');
+      const gallery = document.querySelector('.gallery');
+
+      if (loadingIndicator && gallery) {
+        // Show loading indicator initially
+        loadingIndicator.style.display = 'flex';
+        gallery.style.display = 'none';
+
+        // Fetch data from API usando cachedFetch
+        window.cyberduck.cachedFetch('https://script.google.com/macros/s/AKfycby50Z8qW5B7xo5Ngjdc2s5pqTtTJCLZ7zVKdgoR8uEP9iubd85qWVxY5fiqHicftxhL/exec')
+          .then(data => {
+            if (data.data && Array.isArray(data.data)) {
+              populateGallery(data.data);
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching data:', error);
+            // Fallback to static content if API fails
+            loadingIndicator.style.display = 'none';
+            gallery.style.display = 'grid';
+          });
+      }
+
+      function populateGallery(products) {
+        gallery.innerHTML = ''; // Clear existing content
+        const fragment = document.createDocumentFragment();
+
+        products.forEach(product => {
+          const item = document.createElement('article');
+          item.className = 'gallery__item';
+          item.style.cursor = 'pointer'; // Make it look clickable
+
+          // Add click event to navigate to product.html
+          item.addEventListener('click', () => {
+            // Store product data in localStorage
+            const priceValue = parseFloat(product.PRICE);
+            const productData = {
+              name: product.NAME || 'Producto',
+              price: !isNaN(priceValue) ? priceValue : null,
+              image: product.IMAGE || '',
+              desc: product.DESC || 'Descripción breve del producto.'
+            };
+            localStorage.setItem('cyberduck:selectedProduct', JSON.stringify(productData));
+            // Navigate to product.html
+            window.location.href = './product.html';
+          });
+
+          // Usar lazy loading
+          const imageDiv = document.createElement('div');
+          imageDiv.className = 'gallery__image gallery__image--loading';
+          if (product.IMAGE) {
+            imageDiv.setAttribute('data-bg-image', product.IMAGE);
+          }
+
+          const metaDiv = document.createElement('div');
+          metaDiv.className = 'gallery__meta';
+
+          const nameP = document.createElement('p');
+          nameP.className = 'gallery__name';
+          nameP.textContent = product.NAME || 'Producto';
+
+          const priceP = document.createElement('p');
+          priceP.className = 'gallery__price';
+          priceP.textContent = product.PRICE ? `$${parseFloat(product.PRICE).toLocaleString('es-CO')} COP` : 'Precio no disponible';
+
+          metaDiv.appendChild(nameP);
+          metaDiv.appendChild(priceP);
+
+          item.appendChild(imageDiv);
+          item.appendChild(metaDiv);
+
+          fragment.appendChild(item);
+        });
+
+        gallery.appendChild(fragment);
+
+        // Hide loading indicator and show gallery
+        loadingIndicator.style.display = 'none';
+        gallery.style.display = 'grid';
+        
+        // Aplicar lazy loading
+        setTimeout(() => window.cyberduck.applyLazyLoading(), 100);
+      }
+    })();
+  </script>
+</body>
+</html>

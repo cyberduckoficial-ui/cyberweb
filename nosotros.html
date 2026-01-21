@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nosotros — Cyberduck</title>
+  
+  <!-- DNS Prefetch para optimización -->
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&family=Oxanium:wght@700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+
+<body>
+  <script src="./script.js"></script>
+  <!-- HEADER -->
+  <header class="header">
+    <div class="container header__inner">
+      <div class="brand">
+        <a class="brand__logo-group" href="./index.html">
+          <img src="./imgs/logo.png" alt="Cyberduck logo" class="brand__img">
+          <div class="brand__logo">CYBERDUCK</div>
+        </a>
+        <nav class="nav" aria-label="navegación principal">
+          <a class="nav__link" href="./nuevo.html">¿qué hay de nuevo?</a>
+          <div class="nav__item nav__item--dropdown">
+            <a class="nav__link nav__link--parent" href="./ropa.html?cat=todos" aria-haspopup="true">ropa <span class="nav__chevron" aria-hidden="true"></span></a>
+            <div class="nav__dropdown" role="menu">
+              <a class="nav__dropdown-link" href="./ropa.html?cat=todos" role="menuitem">Todo</a>
+              <a class="nav__dropdown-link" href="./ropa.html?cat=camisetas" role="menuitem">Camisetas</a>
+              <a class="nav__dropdown-link" href="./ropa.html?cat=faldas" role="menuitem">Faldas</a>
+            </div>
+          </div>
+          <a class="nav__link" href="./accesorios.html">accesorios</a>
+          <div class="nav__item nav__item--dropdown">
+            <a class="nav__link nav__link--parent" href="./impresion3d.html?cat=todos" aria-haspopup="true">impresión 3D <span class="nav__chevron" aria-hidden="true"></span></a>
+            <div class="nav__dropdown" role="menu">
+              <a class="nav__dropdown-link" href="./impresion3d.html?cat=llaveros" role="menuitem">Llaveros</a>
+              <a class="nav__dropdown-link" href="./impresion3d.html?cat=figuras" role="menuitem">Figuras</a>
+              <a class="nav__dropdown-link" href="./impresion3d.html?cat=coleccion" role="menuitem">Colección</a>
+            </div>
+          </div>
+          <a class="nav__link" href="./media.html">media</a>
+          <a class="nav__link" href="./nosotros.html">nosotros</a>
+          <a class="nav__custom" href="./personalizar.html">✨ personaliza tu 3D ✨</a>
+        </nav>
+      </div>
+
+      <div class="header__actions">
+        <button class="iconbtn" type="button" aria-label="Idioma">ES</button>
+        <button class="iconbtn" type="button" aria-label="Buscar">⌕</button>
+        <button class="iconbtn" type="button" aria-label="Carrito">🛒</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <section class="section section--nosotros">
+        <div class="section__head">
+          <h1 class="section__title">Nosotros</h1>
+          <a class="viewall" href="./index.html">volver al inicio</a>
+        </div>
+
+        <div class="about">
+          <div class="about__visual">
+            <div class="about__image">
+             <img src="./imgs/nosotros.jpeg" alt="nosotros - cyberduck">
+            </div>
+          </div>
+
+          <div class="about__content">
+            <h2 class="about__heading">Bienvenido al universo Cyberduck</h2>
+            <p class="about__text">
+              Para quienes prefieren piezas con carácter, hechas con conciencia ambiental, y no productos pensados 
+              para durar una temporada.
+            </p>
+            <p class="about__text">
+              Desde el inicio apostamos por lo único: ropa, accesorios y objetos 3D que conectan con 
+              la identidad de cada persona que nos elige. Diseñamos cuidando cada detalle, 
+              porque creemos que lo que te representa merece tiempo y atención.
+            </p>
+            <p class="about__text">
+              Explora, personaliza y hazlo tuyo.
+              Porque Cyberduck no sigue el ritmo del fast fashion, ni tampoco quiere hacerlo a costa 
+              de nuestro planeta. Creamos con conciencia, para que lo que uses hoy también tenga 
+              sentido mañana.
+            </p>
+            <div class="about__cta">
+              <a class="btn btn--primary" href="./index.html">explorar productos</a>
+              <a class="btn" href="./media.html">síguenos en redes</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats section -->
+        <div class="stats">
+          <div class="stat">
+            <div class="stat__number">3+</div>
+            <div class="stat__label">años creando</div>
+          </div>
+          <div class="stat">
+            <div class="stat__number">500+</div>
+            <div class="stat__label">piezas vendidas</div>
+          </div>
+          <div class="stat">
+            <div class="stat__number">100%</div>
+            <div class="stat__label">hecho con amor</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

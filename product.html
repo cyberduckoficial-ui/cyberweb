@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Producto — Cyberduck</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700;800&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <script src="./script.js"></script>
+  <header class="header">
+    <div class="container header__inner">
+      <div class="brand">
+        <a class="brand__logo-group" href="./index.html">
+          <img src="./imgs/logo.png" alt="Cyberduck logo" class="brand__img">
+          <div class="brand__logo">CYBERDUCK</div>
+        </a>
+        <nav class="nav" aria-label="navegación principal">
+          <a class="nav__link" href="./nuevo.html">¿qué hay de nuevo?</a>
+          <div class="nav__item nav__item--dropdown">
+            <a class="nav__link nav__link--parent" href="./ropa.html?cat=todos" aria-haspopup="true">ropa <span class="nav__chevron" aria-hidden="true"></span></a>
+            <div class="nav__dropdown" role="menu">
+              <a class="nav__dropdown-link" href="./ropa.html?cat=todos" role="menuitem">Todo</a>
+              <a class="nav__dropdown-link" href="./ropa.html?cat=camisetas" role="menuitem">Camisetas</a>
+              <a class="nav__dropdown-link" href="./ropa.html?cat=faldas" role="menuitem">Faldas</a>
+            </div>
+          </div>
+          <a class="nav__link" href="./accesorios.html">accesorios</a>
+          <div class="nav__item nav__item--dropdown">
+            <a class="nav__link nav__link--parent" href="./impresion3d.html?cat=todos" aria-haspopup="true">impresión 3D <span class="nav__chevron" aria-hidden="true"></span></a>
+            <div class="nav__dropdown" role="menu">
+              <a class="nav__dropdown-link" href="./impresion3d.html?cat=llaveros" role="menuitem">Llaveros</a>
+              <a class="nav__dropdown-link" href="./impresion3d.html?cat=figuras" role="menuitem">Figuras</a>
+              <a class="nav__dropdown-link" href="./impresion3d.html?cat=coleccion" role="menuitem">Colección</a>
+            </div>
+          </div>
+          <a class="nav__link" href="./media.html">media</a>
+          <a class="nav__link" href="./nosotros.html">nosotros</a>
+          <a class="nav__custom" href="./personalizar.html">✨ personaliza tu 3D ✨</a>
+        </nav>
+      </div>
+
+      <div class="header__actions">
+        <button class="iconbtn" type="button" aria-label="Idioma">ES</button>
+        <button class="iconbtn" type="button" aria-label="Buscar">⌕</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <section class="section product-detail">
+        <div class="product-detail__grid">
+          <div class="product-detail__visual">
+            <div class="product-detail__image" id="pd-image" aria-hidden="true"></div>
+          </div>
+
+          <div class="product-detail__info">
+            <button id="pd-back" class="btn" aria-label="Volver">Volver</button>
+            <h1 id="pd-title" class="headline">Título del producto</h1>
+            <div id="pd-price" class="product-detail__price">0,00 EUR</div>
+
+            <div style="margin:18px 0;">
+              <a class="btn btn--primary" id="pd-add">AÑADIR AL CARRITO →</a>
+            </div>
+
+            <div class="product-detail__excerpt" id="pd-excerpt">
+              <p>Descripción breve del producto.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Descripción completa eliminada según petición del usuario -->
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__grid">
+      <div>
+        <h3 class="footer__title">Cyberduck</h3>
+        <p class="footer__tiny">Estética neón en negro, objetos alternativos y prints 3D.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Populate product data from localStorage
+    (function(){
+      try{
+        const raw = localStorage.getItem('cyberduck:selectedProduct');
+        const data = raw ? JSON.parse(raw) : null;
+        const title = data && data.name ? data.name : 'Producto';
+        const price = data && data.price ? (typeof data.price === 'number' ? `$${data.price.toLocaleString('es-CO')} COP` : data.price) : '—';
+        let desc = data && data.desc ? data.desc : 'Descripción breve del producto.';
+        const image = data && data.image ? data.image : '';
+
+        if(data && data.category === 'personalizado'){
+          // Fetch title and description from Google Script
+          fetch('https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLhWlgY5Fdl5wowNtL4vPepVvILg5ZlIkwyrmm8HyRWxQRJ2qLCi-v7gN3VZ8ErRIByWR8T9LLFLDejPriNlwB0WAcHX9Lpe4tkI1F5SeJOAD--X04Qm_dmy9eO3VYjfG5s1GNfuEgm4v4XEooMJU9EFWM_3rq10vYMJvq8tJkpbzUbStrMtLGljkjuPxR1sYE_75OjCaXE90EHpy1ZLSHTQGfItYuwLnDEG3ZYB-7hgAzpA3qdGjHI0T0N7Ac3p0XV9fvqF5pBNPE-ctBy1PDrUEM4C5w&lib=M-YxSEsKo8g88BRj95yNKp5OjAoyKQGY4')
+            .then(response => response.json())
+            .then(scriptData => {
+              if(scriptData.title) document.getElementById('pd-title').textContent = scriptData.title;
+              if(scriptData.description) document.getElementById('pd-excerpt').innerHTML = scriptData.description;
+            })
+            .catch(e => {
+              console.warn('Failed to fetch personalization data:', e);
+              desc = 'Personalización del producto<br><br>Para realizar tu pedido personalizado, envíanos la siguiente información:<br><br>Tipo de producto que deseas personalizar<br><br>Medidas (largo × ancho)<br><br>¿Deseas que lo pintemos?<br><br>Con estos datos, escríbenos directamente al 310 818 2572 y con gusto te asesoramos en todo el proceso para que tu producto quede justo como lo imaginas.';
+              document.getElementById('pd-excerpt').innerHTML = desc;
+            });
+        }
+
+        document.getElementById('pd-title').textContent = title;
+        document.getElementById('pd-price').textContent = price;
+        document.getElementById('pd-excerpt').innerHTML = desc;
+
+        const imgEl = document.getElementById('pd-image');
+        if(image){
+          // Create an img element for better display
+          const actualImg = document.createElement('img');
+          actualImg.src = image.replace(/^url\(['"]?/, '').replace(/['"]?\)$/, ''); // Remove url() wrapper if present
+          actualImg.style.width = '100%';
+          actualImg.style.height = '100%';
+          actualImg.style.objectFit = 'contain';
+          actualImg.style.borderRadius = '16px';
+          actualImg.alt = title;
+          imgEl.innerHTML = '';
+          imgEl.appendChild(actualImg);
+        } else {
+          imgEl.innerHTML = '';
+          imgEl.style.background = 'linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01))';
+        }
+      }catch(e){ console.warn(e); }
+
+      // Add simple add-to-cart handler (stores in localStorage cart array)
+      document.getElementById('pd-add').addEventListener('click', function(){
+        try{
+          const raw = localStorage.getItem('cyberduck:selectedProduct');
+          let item = raw ? JSON.parse(raw) : { name: document.getElementById('pd-title').textContent };
+          // Ensure price is set from the page if not in localStorage
+          if (!item.price) {
+            item.price = document.getElementById('pd-price').textContent || '0';
+          }
+          const cartRaw = localStorage.getItem('cyberduck:cart');
+          const cart = cartRaw ? JSON.parse(cartRaw) : [];
+          cart.push(item);
+          localStorage.setItem('cyberduck:cart', JSON.stringify(cart));
+
+          // Update cart UI using global renderCart if available
+          if (window.cyberduck && window.cyberduck.renderCart) {
+            window.cyberduck.renderCart();
+          } else {
+            // Fallback manual update
+            const cartCount = document.getElementById('cartCount');
+            if (cartCount) cartCount.textContent = cart.length;
+            let total = 0;
+            cart.forEach(it => {
+              const num = (it.price || '').toString().replace(/\$/g, '').replace(/\./g, '').replace(',', '.');
+              const val = parseFloat(num) || 0;
+              total += val;
+            });
+            const cartTotal = document.getElementById('cartTotal');
+            if (cartTotal) cartTotal.textContent = 'Total: $' + (total ? total.toLocaleString('es-CO') : '0');
+          }
+          alert('Producto añadido al carrito');
+        }catch(e){ console.warn(e); }
+      });
+
+      // Back button behavior
+      const backBtn = document.getElementById('pd-back');
+      if(backBtn){
+        backBtn.addEventListener('click', function(e){ e.preventDefault(); window.history.back(); });
+      }
+    })();
+  </script>
+</body>
+</html>

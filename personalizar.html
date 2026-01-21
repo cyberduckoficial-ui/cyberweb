@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personaliza tu 3D — Cyberduck</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <script src="./script.js"></script>
+  <header class="header">
+    <div class="container header__inner">
+      <div class="brand">
+        <a class="brand__logo-group" href="./index.html">
+          <img src="./imgs/logo.png" alt="Cyberduck logo" class="brand__img">
+          <div class="brand__logo">CYBERDUCK</div>
+        </a>
+        <nav class="nav" aria-label="navegación principal">
+          <a class="nav__link" href="./nuevo.html">¿qué hay de nuevo?</a>
+          <div class="nav__item nav__item--dropdown">
+            <a class="nav__link nav__link--parent" href="./ropa.html?cat=todos" aria-haspopup="true">ropa <span class="nav__chevron" aria-hidden="true"></span></a>
+            <div class="nav__dropdown" role="menu">
+              <a class="nav__dropdown-link" href="./ropa.html?cat=todos" role="menuitem">Todo</a>
+              <a class="nav__dropdown-link" href="./ropa.html?cat=camisetas" role="menuitem">Camisetas</a>
+              <a class="nav__dropdown-link" href="./ropa.html?cat=faldas" role="menuitem">Faldas</a>
+            </div>
+          </div>
+          <a class="nav__link" href="./accesorios.html">accesorios</a>
+          <div class="nav__item nav__item--dropdown">
+            <a class="nav__link nav__link--parent" href="./impresion3d.html?cat=todos" aria-haspopup="true">impresión 3D <span class="nav__chevron" aria-hidden="true"></span></a>
+            <div class="nav__dropdown" role="menu">
+              <a class="nav__dropdown-link" href="./impresion3d.html?cat=llaveros" role="menuitem">Llaveros</a>
+              <a class="nav__dropdown-link" href="./impresion3d.html?cat=figuras" role="menuitem">Figuras</a>
+              <a class="nav__dropdown-link" href="./impresion3d.html?cat=coleccion" role="menuitem">Colección</a>
+            </div>
+          </div>
+          <a class="nav__link" href="./media.html">media</a>
+          <a class="nav__link" href="./nosotros.html">nosotros</a>
+          <a class="nav__custom" href="./personalizar.html">✨ personaliza tu 3D ✨</a>
+        </nav>
+      </div>
+
+      <div class="header__actions">
+        <button class="iconbtn" type="button" aria-label="Idioma">ES</button>
+        <button class="iconbtn" type="button" aria-label="Buscar">⌕</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <section class="section customize-section" id="custom3d">
+        <div class="section__head">
+          <h1 class="section__title">Personaliza tu 3D</h1>
+          <p class="viewall" style="pointer-events:none; opacity:.9">Elige un formato para personalizar</p>
+        </div>
+
+        <div class="customize-grid" id="customize-grid">
+          <!-- Products will be loaded dynamically -->
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // Fetch products from Google Script and render them
+    fetch('https://script.google.com/macros/s/AKfycbztotFgcZHKbmTpEM0jEqtCOZqNtjH3DHaQgFf8up4KwtW9M08eprqP0wKYdKR8fRAO/exec')
+      .then(response => response.json())
+      .then(data => {
+        console.log('API Response:', data); // Debug log
+        const grid = document.getElementById('customize-grid');
+        let products = [];
+
+        // Handle API response structure: { data: [...] }
+        if (data.data && Array.isArray(data.data)) {
+          products = data.data;
+        } else if (Array.isArray(data)) {
+          products = data;
+        } else if (data.products && Array.isArray(data.products)) {
+          products = data.products;
+        } else if (data && typeof data === 'object') {
+          // If it's an object, try to find arrays within it
+          const arrays = Object.values(data).filter(val => Array.isArray(val));
+          if (arrays.length > 0) {
+            products = arrays[0];
+          } else {
+            // Convert object to array if it has product-like properties
+            products = Object.values(data).filter(item =>
+              item && typeof item === 'object' && (item.title || item.name || item.NAME)
+            );
+          }
+        }
+
+        console.log('Parsed products:', products); // Debug log
+
+        if (products.length > 0) {
+          products.forEach(product => {
+            const card = document.createElement('article');
+            card.className = 'custom-card gallery__item';
+            card.setAttribute('data-custom', product.NAME || product.name || 'personalizado');
+            card.setAttribute('data-title', `Personaliza — ${product.NAME || product.name || 'Producto'}`);
+            card.setAttribute('data-price', product.PRICE || 'Precio a cotizar');
+            card.setAttribute('data-description', product.DESCRIPTION || `Personalización: ${product.NAME || product.name || 'personalizado'}`);
+            card.style.cursor = 'pointer';
+
+            card.innerHTML = `
+              <div class="custom-thumb gallery__image" style="background-image: url('${product.IMAGE || product.image || product.img || ''}'); background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
+              <div class="custom-meta">
+                <div class="custom-title">${product.NAME || product.name || 'Producto'}</div>
+              </div>
+            `;
+
+            grid.appendChild(card);
+          });
+        } else {
+          // Fallback to static products if API doesn't return expected data
+          console.log('Using fallback products');
+          const fallbackProducts = [
+            { name: 'camiseta-buzo', title: 'Camiseta / Buzo', image: './imgs/estampados.png' },
+            { name: 'skin-minecraft', title: 'Skin — Minecraft', image: './imgs/minecraft.png' },
+            { name: 'skin-roblox', title: 'Skin — Roblox', image: './imgs/roblox.png' },
+            { name: 'llavero', title: 'Llavero', image: './imgs/llaveros.png' },
+            { name: 'figura', title: 'Figura', image: './imgs/figuras.png' },
+            { name: 'cosplay', title: 'Cosplay', image: './imgs/cosplay.png' }
+          ];
+
+          fallbackProducts.forEach(product => {
+            const card = document.createElement('article');
+            card.className = 'custom-card gallery__item';
+            card.setAttribute('data-custom', product.name);
+            card.setAttribute('data-title', `Personaliza — ${product.title}`);
+            card.setAttribute('data-price', 'Precio a cotizar');
+            card.setAttribute('data-description', `Personalización: ${product.name}`);
+            card.style.cursor = 'pointer';
+
+          card.innerHTML = `
+            <div class="custom-thumb gallery__image" style="background-image: url('${product.image}'); background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
+            <div class="custom-meta">
+              <div class="custom-title">${product.title}</div>
+            </div>
+          `;
+
+            grid.appendChild(card);
+          });
+        }
+      })
+      .catch(e => {
+        console.warn('Failed to fetch products:', e);
+        // Fallback to static products
+        const grid = document.getElementById('customize-grid');
+        const fallbackProducts = [
+          { name: 'camiseta-buzo', title: 'Camiseta / Buzo', image: './imgs/estampados.png' },
+          { name: 'skin-minecraft', title: 'Skin — Minecraft', image: './imgs/minecraft.png' },
+          { name: 'skin-roblox', title: 'Skin — Roblox', image: './imgs/roblox.png' },
+          { name: 'llavero', title: 'Llavero', image: './imgs/llaveros.png' },
+          { name: 'figura', title: 'Figura', image: './imgs/figuras.png' },
+          { name: 'cosplay', title: 'Cosplay', image: './imgs/cosplay.png' }
+        ];
+
+        fallbackProducts.forEach(product => {
+          const card = document.createElement('article');
+          card.className = 'custom-card gallery__item';
+          card.setAttribute('data-custom', product.name);
+          card.setAttribute('data-title', `Personaliza — ${product.title}`);
+          card.setAttribute('data-price', 'Precio a cotizar');
+          card.setAttribute('data-description', `Personalización: ${product.name}`);
+          card.style.cursor = 'pointer';
+
+          card.innerHTML = `
+            <div class="custom-thumb gallery__image" style="background-image: url('${product.image}'); background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
+            <div class="custom-meta">
+              <div class="custom-title">${product.title}</div>
+              </div>
+          `;
+
+          grid.appendChild(card);
+        });
+      });
+
+    // Add click handler for dynamically added products
+    document.addEventListener('click', function(e) {
+      const card = e.target.closest('.custom-card');
+      if (card && card.classList.contains('gallery__item')) {
+        e.preventDefault();
+        const title = card.getAttribute('data-title') || 'Producto';
+        const price = card.getAttribute('data-price') || 'Precio a cotizar';
+        const desc = card.getAttribute('data-description') || 'Descripción del producto';
+        const image = card.querySelector('.gallery__image') ?
+          getComputedStyle(card.querySelector('.gallery__image')).backgroundImage.replace(/url\(['"]?(.*?)['"]?\)/, '$1') : '';
+
+        const prod = {
+          name: title,
+          price: price,
+          category: 'personalizado',
+          image: image,
+          desc: desc
+        };
+        localStorage.setItem('cyberduck:selectedProduct', JSON.stringify(prod));
+        window.location.href = './product.html';
+      }
+    });
+  </script>
+</body>
+</html>

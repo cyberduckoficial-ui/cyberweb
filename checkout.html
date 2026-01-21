@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pagar — Cyberduck</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700;800&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <script src="./script.js"></script>
+  <header class="header">
+    <div class="container header__inner">
+      <div class="brand">
+        <a class="brand__logo-group" href="./index.html">
+          <img src="./imgs/logo.png" alt="Cyberduck logo" class="brand__img">
+          <div class="brand__logo">CYBERDUCK</div>
+        </a>
+        <nav class="nav" aria-label="navegación principal">
+          <a class="nav__link" href="./nuevo.html">¿qué hay de nuevo?</a>
+          <a class="nav__link" href="./ropa.html?cat=todos">ropa</a>
+          <a class="nav__link" href="./impresion3d.html?cat=todos">impresión 3D</a>
+          <a class="nav__link" href="./accesorios.html">accesorios</a>
+          <a class="nav__link" href="./media.html">media</a>
+        </nav>
+      </div>
+
+      <div class="header__actions">
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <section class="section">
+        <div class="section__head">
+          <h1 class="section__title">Pagar</h1>
+          <a class="viewall" href="./index.html">volver al inicio</a>
+        </div>
+
+        <div class="checkout-layout">
+          <form id="checkoutForm" action="https://script.google.com/macros/s/AKfycbya7tgfQg8STwxwbBcAOlm8sWJJsr5jn-ukAMkx-YUA9kIjf6QgfbMZB1VTNOhXlUHe/exec" method="POST" style="background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)); padding:18px; border-radius:12px; border:1px solid rgba(255,255,255,.04);">
+            <h2 style="margin:0 0 12px;">Datos del comprador</h2>
+
+            <label style="display:block; margin-bottom:10px;">
+              <div style="font-weight:800; font-size:12px; margin-bottom:6px;">Nombre completo</div>
+              <input id="fullname" name="nombre" type="text" required style="width:100%; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,.06); background:transparent; color:var(--text);" placeholder="Juan Pérez" />
+            </label>
+
+            <label style="display:block; margin-bottom:10px;">
+              <div style="font-weight:800; font-size:12px; margin-bottom:6px;">Correo</div>
+              <input id="email" name="correo" type="email" required style="width:100%; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,.06); background:transparent; color:var(--text);" placeholder="juan@correo.com" />
+            </label>
+
+            <label style="display:block; margin-bottom:10px;">
+              <div style="font-weight:800; font-size:12px; margin-bottom:6px;">Celular</div>
+              <input id="phone" name="celular" type="tel" required style="width:100%; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,.06); background:transparent; color:var(--text);" placeholder="+57 3xx xxx xxxx" />
+            </label>
+
+            <label style="display:block; margin-bottom:10px;">
+              <div style="font-weight:800; font-size:12px; margin-bottom:6px;">Código de descuento (opcional)</div>
+              <input id="discount" name="codigoDescuento" type="text" style="width:100%; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,.06); background:transparent; color:var(--text);" placeholder="PROMO2025" />
+            </label>
+
+            <label style="display:block; margin-bottom:16px;">
+              <div style="font-weight:800; font-size:12px; margin-bottom:6px;">Medio de pago</div>
+              <select id="paymentMethod" name="medioPago" required style="width:100%; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,.06); background: var(--bg); color: white;">
+                <option value="nequi">Nequi</option>
+                <option value="tarjeta">Tarjeta</option>
+              </select>
+            </label>
+
+            <input type="hidden" id="totalInput" name="total" value="" />
+            <input type="hidden" id="cartInput" name="productos" value="" />
+
+            <div style="display:flex; gap:10px; align-items:center;">
+              <button id="checkoutSubmit" class="btn btn--primary" type="submit">Enviar pedido →</button>
+              <a class="btn" href="./index.html">Seguir comprando</a>
+            </div>
+            <div id="loadingIndicator" style="display:none; margin-top:10px; color:var(--text); font-weight:600;">Procesando pedido...</div>
+          </form>
+
+          <aside style="background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)); padding:14px; border-radius:12px; border:1px solid rgba(255,255,255,.04);">
+            <h3 style="margin:0 0 10px;">Resumen del carrito</h3>
+            <div id="checkoutItems" style="display:flex; flex-direction:column; gap:10px; max-height:420px; overflow:auto; margin-bottom:12px;"></div>
+            <div id="checkoutTotal" style="font-weight:900; margin-top:6px;">Total: —</div>
+          </aside>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    (function(){
+      function readCart(){ try{ const raw = localStorage.getItem('cyberduck:cart'); return raw ? JSON.parse(raw) : []; }catch(e){ return []; } }
+      function formatPrice(p){ return p.toLocaleString('es-CO'); }
+
+      const itemsWrap = document.getElementById('checkoutItems');
+      const totalEl = document.getElementById('checkoutTotal');
+      const cart = readCart();
+      let total = 0;
+      const submitBtn = document.getElementById('checkoutSubmit');
+      if(!cart.length){
+        itemsWrap.innerHTML = '<div style="color:var(--muted)">No hay productos en el carrito.</div>';
+        if(submitBtn){ submitBtn.classList.add('is-disabled'); submitBtn.setAttribute('aria-disabled','true'); }
+      } else {
+        if(submitBtn){ submitBtn.classList.remove('is-disabled'); submitBtn.removeAttribute('aria-disabled'); }
+      }
+      cart.forEach(it => {
+        const el = document.createElement('div');
+        el.style.display='flex'; el.style.gap='8px'; el.style.alignItems='center';
+        const priceDisplay = typeof it.price === 'number' ? `$${it.price.toLocaleString('es-CO')} COP` : (it.price || '');
+        el.innerHTML = '<div style="width:56px;height:56px;border-radius:8px;background-size:cover;background-position:center;'+(it.image?('background-image:'+ (it.image.indexOf('url(')===0?it.image:'url('+it.image+')')):'')+'"></div>'+
+          '<div style="flex:1"><div style="font-weight:800">'+(it.name||'Producto')+'</div><div style="color:var(--muted);font-size:13px">'+priceDisplay+'</div></div>';
+        itemsWrap.appendChild(el);
+        const num = typeof it.price === 'number' ? it.price : parseFloat((it.price||'').toString().replace(/\$/g, '').replace(/\./g, '').replace(',', '.')) || 0;
+        total += num;
+      });
+      totalEl.textContent = 'Total: $' + (total ? formatPrice(total) : '0');
+
+      // Set total in hidden input
+      const totalInput = document.getElementById('totalInput');
+      if(totalInput) totalInput.value = total.toString();
+
+      // Set cart products in hidden input
+      const cartInput = document.getElementById('cartInput');
+      if(cartInput) cartInput.value = JSON.stringify(cart);
+
+      // handle submit
+      const form = document.getElementById('checkoutForm');
+      const loadingIndicator = document.getElementById('loadingIndicator');
+      form.addEventListener('submit', function(e){
+        e.preventDefault();
+        const fullname = document.getElementById('fullname').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        if(!fullname||!email||!phone){
+          alert('Por favor completa los datos obligatorios.');
+          return;
+        }
+
+        // Show loading indicator and disable button
+        if(loadingIndicator) loadingIndicator.style.display = 'block';
+        if(submitBtn) submitBtn.disabled = true;
+
+        // Submit form data using fetch
+        const formData = new FormData(form);
+        fetch(form.action, {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => {
+          if (response.ok) {
+            // Success: hide loading, show message, clear cart and form, redirect
+            if(loadingIndicator) loadingIndicator.style.display = 'none';
+            alert('¡Compra exitosa! Gracias por tu pedido.');
+            localStorage.removeItem('cyberduck:cart');
+            form.reset();
+            window.location.href = './index.html';
+          } else {
+            throw new Error('Error en el envío del pedido');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          // Hide loading and re-enable button on error
+          if(loadingIndicator) loadingIndicator.style.display = 'none';
+          if(submitBtn) submitBtn.disabled = false;
+          alert('Hubo un error al enviar el pedido. Por favor intenta de nuevo.');
+        });
+      });
+    })();
+  </script>
+  
+</body>
+</html>
