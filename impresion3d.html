@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyberduck</title>
+  
+  <!-- DNS Prefetch y Preconnect para optimizar carga de APIs -->
+  <link rel="dns-prefetch" href="https://script.google.com">
+  <link rel="preconnect" href="https://script.google.com" crossorigin>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&family=Oxanium:wght@700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+
+<body>
+   <script src="./script.js"></script>
+  <!-- HEADER -->
+  <header class="header">
+    <div class="container header__inner">
+      <div class="brand">
+        <a class="brand__logo-group" href="./index.html">
+          <img src="./imgs/logo.png" alt="Cyberduck logo" class="brand__img">
+          <div class="brand__logo">CYBERDUCK</div>
+        </a>
+        <nav class="nav" aria-label="navegación principal">
+          <a class="nav__link" href="./nuevo.html">¿qué hay de nuevo?</a>
+          <div class="nav__item nav__item--dropdown">
+            <a class="nav__link nav__link--parent" href="./ropa.html?cat=todos" aria-haspopup="true">ropa <span class="nav__chevron" aria-hidden="true"></span></a>
+            <div class="nav__dropdown" role="menu">
+              <a class="nav__dropdown-link" href="./ropa.html?cat=todos" role="menuitem">Todo</a>
+              <a class="nav__dropdown-link" href="./ropa.html?cat=camisetas" role="menuitem">Camisetas</a>
+              <a class="nav__dropdown-link" href="./ropa.html?cat=faldas" role="menuitem">Faldas</a>
+            </div>
+          </div>
+          <a class="nav__link" href="./accesorios.html">accesorios</a>
+          <div class="nav__item nav__item--dropdown">
+            <a class="nav__link nav__link--parent" href="./impresion3d.html?cat=todos" aria-haspopup="true">impresión 3D <span class="nav__chevron" aria-hidden="true"></span></a>
+            <div class="nav__dropdown" role="menu">
+              <a class="nav__dropdown-link" href="./impresion3d.html?cat=llaveros" role="menuitem">Llaveros</a>
+              <a class="nav__dropdown-link" href="./impresion3d.html?cat=figuras" role="menuitem">Figuras</a>
+              <a class="nav__dropdown-link" href="./impresion3d.html?cat=coleccion" role="menuitem">Colección</a>
+            </div>
+          </div>
+          <a class="nav__link" href="./media.html">media</a>
+          <a class="nav__link" href="./nosotros.html">nosotros</a>
+          <a class="nav__custom" href="./personalizar.html">✨ personaliza tu 3D ✨</a>
+        </nav>
+      </div>
+
+      <div class="header__actions">
+        <button class="iconbtn" type="button" aria-label="Idioma">ES</button>
+        <button class="iconbtn" type="button" aria-label="Buscar">⌕</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <section class="section section--impresion3d">
+        <div class="section__head">
+          <h1 class="section__title" id="impresion3dTitle">Impresión 3D</h1>
+          <a class="viewall" href="./index.html">volver al inicio</a>
+        </div>
+
+
+
+        <div style="margin:18px 0;">
+          <a class="viewall" href="./personalizar.html">Personaliza tu 3D →</a>
+        </div>
+
+        <div class="loading-indicator" id="loading-indicator">
+          <div class="loading-spinner"></div>
+          <p>Cargando productos...</p>
+        </div>
+
+        <div class="gallery" id="impresion3dGallery">
+          <!-- Gallery items are loaded dynamically from Google Sheets -->
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // Funciones para mostrar/ocultar loading
+    function showLoading() {
+      const indicator = document.getElementById('loading-indicator');
+      if (indicator) {
+        indicator.style.display = 'flex';
+      }
+    }
+
+    function hideLoading() {
+      const indicator = document.getElementById('loading-indicator');
+      if (indicator) {
+        indicator.style.display = 'none';
+      }
+    }
+
+    // Actualizar título
+    const titleEl = document.getElementById('impresion3dTitle');
+    titleEl.textContent = 'Impresión 3D — Todo';
+
+    // Función para asignar comportamiento de click a los productos
+    function setupProductClickHandlers() {
+      const printItems = document.querySelectorAll('.gallery__item');
+      printItems.forEach(item => {
+        item.style.cursor = 'pointer';
+        // Evitar múltiples listeners
+        item.replaceWith(item.cloneNode(true));
+      });
+
+      // Re-seleccionar después del replace
+      const newItems = document.querySelectorAll('.gallery__item');
+      newItems.forEach(item => {
+        item.addEventListener('click', () => {
+          const name = item.querySelector('.gallery__name')?.textContent || 'Producto';
+          const price = item.querySelector('.gallery__price')?.textContent || '';
+          const category = item.getAttribute('data-category') || '';
+            const imgDiv = item.querySelector('.gallery__image');
+            let image = '';
+            if (imgDiv) {
+              const imgElement = imgDiv.querySelector('img');
+              if (imgElement) {
+                image = imgElement.src;
+              } else {
+                image = imgDiv.getAttribute('data-bg-image') || '';
+              }
+            }
+
+          const desc = item.querySelector('.gallery__desc')?.textContent || '';
+          const prod = { name, price, category, image, desc };
+          localStorage.setItem('cyberduck:selectedProduct', JSON.stringify(prod));
+          window.location.href = './product.html';
+        });
+      });
+    }
+
+    
+
+    // === Integración con Google Sheets ===
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLTeWyAHgR_0i2bE50o-ufvp0gK_FnNcVaMc_S80xpSW-6MHQgTLoxm-6eeYeWz6hE/exec';
+
+    // Renderiza items recibidos desde el script (optimizado)
+    function renderItemsFromSheet(rows) {
+      const gallery = document.getElementById('impresion3dGallery');
+      if (!rows || !rows.length) return;
+
+      // Limpiar contenido actual
+      gallery.innerHTML = '';
+
+      const fragment = document.createDocumentFragment();
+
+      rows.forEach(row => {
+        // Normalizar claves (trim + lowercase) para aceptar variantes como NAME, Name, name
+        const normalized = {};
+        Object.keys(row).forEach(k => {
+          if (!k) return;
+          normalized[k.trim().toLowerCase()] = row[k];
+        });
+
+        const name = normalized['name'] || normalized['nombre'] || normalized['producto'] || normalized['title'] || 'Producto';
+        const price = normalized['price'] || normalized['precio'] || '';
+        const formattedPrice = price ? `$${parseFloat(price).toLocaleString('es-CO')}` : '';
+        const itemCategory = (normalized['category'] || normalized['categoria'] || normalized['type'] || '').toString().toLowerCase();
+        const image = normalized['image'] || normalized['imagen'] || normalized['img'] || '';
+        const desc = normalized['desc'] || normalized['descripcion'] || normalized['description'] || '';
+
+        const article = document.createElement('article');
+        article.className = 'gallery__item';
+        if (itemCategory) article.setAttribute('data-category', itemCategory);
+
+        // Usar lazy loading
+        const imageDiv = document.createElement('div');
+        imageDiv.className = 'gallery__image gallery__image--loading';
+        imageDiv.setAttribute('data-bg-image', image);
+
+        const metaDiv = document.createElement('div');
+        metaDiv.className = 'gallery__meta';
+        metaDiv.innerHTML = `
+          <p class="gallery__name">${name}</p>
+          <p class="gallery__price">${formattedPrice}</p>
+          <p class="gallery__category">${itemCategory ? itemCategory.charAt(0).toUpperCase() + itemCategory.slice(1) : ''}</p>
+          <p class="gallery__desc" style="display:none">${desc}</p>
+        `;
+
+        article.appendChild(imageDiv);
+        article.appendChild(metaDiv);
+        fragment.appendChild(article);
+      });
+
+      gallery.appendChild(fragment);
+
+      setupProductClickHandlers();
+      setTimeout(() => window.cyberduck.applyLazyLoading(), 100);
+    }
+
+    // Fetch GET desde el script para obtener los datos (optimizado)
+    showLoading();
+    window.cyberduck.cachedFetch(SCRIPT_URL)
+      .then(json => {
+        if (json && Array.isArray(json.data) && json.data.length) {
+          renderItemsFromSheet(json.data);
+        }
+        hideLoading();
+      })
+      .catch(err => {
+        console.warn('No se pudo obtener datos desde Google Sheets:', err);
+        hideLoading();
+      });
+
+    // Inicializar handlers para los productos estáticos iniciales
+    setupProductClickHandlers();
+  </script>
+ 
+</body>
+</html>
