@@ -16,12 +16,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700;800&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="preload" as="image" href="./imgs/landing1.png" fetchpriority="high">
 
   <link rel="stylesheet" href="./styles.css">
 </head>
 
 <body>
-  <script src="./script.js"></script>
   <!-- HEADER -->
   <header class="header">
     <div class="container header__inner">
@@ -73,7 +73,7 @@
             <div class="slide__visual">
               <div class="shot">
                 <div class="shot__inner" aria-hidden="true">
-                  <img src="./imgs/landing1.png" alt="Collares y piezas raras">
+                  <img src="./imgs/landing1.png" alt="Collares y piezas raras" fetchpriority="high" decoding="async">
                 </div>
               </div>
             </div>
@@ -95,7 +95,7 @@
             <div class="slide__visual">
               <div class="shot">
                 <div class="shot__inner" aria-hidden="true">
-                  <img src="./imgs/landing2.png" alt="Collares y piezas raras">
+                  <img src="./imgs/landing2.png" alt="Collares y piezas raras" loading="lazy" decoding="async">
                   </svg>
                 </div>
               </div>
@@ -120,7 +120,7 @@
             <div class="slide__visual">
               <div class="shot">
                 <div class="shot__inner" aria-hidden="true">
-                  <img src="./imgs/landing3.png" alt="Collares y piezas raras">
+                  <img src="./imgs/landing3.png" alt="Collares y piezas raras" loading="lazy" decoding="async">
                 </div>
               </div>
             </div>
@@ -166,7 +166,7 @@
         <div class="biggrid">
           <article class="bigcard">
             <div class="bigcard__visual">
-              <img src="./imgs/gift.png" alt="Tarjeta de regalo" class="bigcard__image">
+              <img src="./imgs/gift.png" alt="Tarjeta de regalo" class="bigcard__image" loading="lazy" decoding="async">
               <div class="bigcard__badge">gift</div>
             </div>
             <div class="bigcard__content">
@@ -178,7 +178,7 @@
 
           <article class="bigcard">
             <div class="bigcard__visual bigcard__visual--alt">
-              <img src="./imgs/community.png" alt="Comunidad" class="bigcard__image">
+              <img src="./imgs/community.png" alt="Comunidad" class="bigcard__image" loading="lazy" decoding="async">
               <div class="bigcard__badge chip--magenta">club</div>
             </div>
             <div class="bigcard__content">
@@ -242,6 +242,8 @@
     </div>
   </footer>
 
+  <script src="./script.js"></script>
+
   <script>
     // Populate nuevo section with API data
     (function(){
@@ -290,9 +292,13 @@
           imageDiv.className = 'gallery__image';
           if (product.IMAGE) {
             const img = document.createElement('img');
-            img.src = product.IMAGE;
+            const sourceImage = window.cyberduck && window.cyberduck.optimizeImageUrl
+              ? window.cyberduck.optimizeImageUrl(product.IMAGE, { width: 720, quality: 72 })
+              : product.IMAGE;
+            img.src = sourceImage;
             img.alt = product.NAME || 'Producto';
             img.loading = 'lazy';
+            img.decoding = 'async';
             imageDiv.appendChild(img);
           }
 

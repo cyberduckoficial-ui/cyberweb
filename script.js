@@ -6,6 +6,20 @@
 const apiCache = new Map();
 const API_CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
+function optimizeImageUrl(url, options = {}) {
+  if (!url || typeof url !== 'string') return '';
+
+  const trimmed = url.trim();
+  const { width = 720, quality = 72 } = options;
+
+  if (/^https:\/\/raw\.githubusercontent\.com\//i.test(trimmed)) {
+    const encoded = encodeURIComponent(trimmed.replace(/^https?:\/\//i, ''));
+    return `https://wsrv.nl/?url=${encoded}&w=${width}&q=${quality}&output=webp`;
+  }
+
+  return trimmed;
+}
+
 function cachedFetch(url) {
   const now = Date.now();
   const cached = apiCache.get(url);
@@ -14,7 +28,7 @@ function cachedFetch(url) {
     return Promise.resolve(cached.data);
   }
   
-  return fetch(url)
+  return fetch(url, { cache: 'force-cache' })
     .then(response => response.json())
     .then(data => {
       apiCache.set(url, { data, timestamp: now });
@@ -30,27 +44,28 @@ const imageObserver = new IntersectionObserver((entries, observer) => {
       const imageUrl = element.dataset.bgImage;
 
       if (imageUrl && imageUrl.trim() !== '') {
+        const optimizedImageUrl = optimizeImageUrl(imageUrl, { width: 720, quality: 72 });
         // Precargar imagen
         const img = new Image();
         const timeout = setTimeout(() => {
-          console.warn('Image load timeout for:', imageUrl);
+          console.warn('Image load timeout for:', optimizedImageUrl);
           element.classList.add('is-error');
           observer.unobserve(element);
         }, 10000); // Timeout de 10 segundos para evitar carga infinita
 
         img.onload = () => {
           clearTimeout(timeout);
-          element.style.backgroundImage = `url(${imageUrl})`;
+          element.style.backgroundImage = `url(${optimizedImageUrl})`;
           element.classList.add('is-loaded');
           observer.unobserve(element);
         };
         img.onerror = () => {
           clearTimeout(timeout);
-          console.warn('Image load error for:', imageUrl);
+          console.warn('Image load error for:', optimizedImageUrl);
           element.classList.add('is-error');
           observer.unobserve(element);
         };
-        img.src = imageUrl;
+        img.src = optimizedImageUrl;
       } else {
         // No image URL, set error state immediately
         element.classList.add('is-error');
@@ -69,30 +84,31 @@ function applyLazyLoading(selector = '.gallery__image') {
   images.forEach(img => {
     const imageUrl = img.dataset.bgImage;
     if (imageUrl && imageUrl.trim() !== '' && !img.classList.contains('is-loaded') && !img.classList.contains('is-error')) {
+      const optimizedImageUrl = optimizeImageUrl(imageUrl, { width: 720, quality: 72 });
       // Cargar imagen inmediatamente para debugging
       const imgEl = new Image();
       imgEl.onload = () => {
-        console.log('Image loaded successfully:', imageUrl);
         // Create an actual img element for better display
         const actualImg = document.createElement('img');
-        actualImg.src = imageUrl;
+        actualImg.src = optimizedImageUrl;
         actualImg.style.width = '100%';
         actualImg.style.height = '100%';
         actualImg.style.objectFit = 'cover';
         actualImg.style.borderRadius = '16px';
         actualImg.alt = 'Producto';
+        actualImg.loading = 'lazy';
+        actualImg.decoding = 'async';
         img.innerHTML = '';
         img.appendChild(actualImg);
         img.classList.remove('gallery__image--loading');
         img.classList.add('is-loaded');
-        console.log('Created img element for:', imageUrl);
       };
       imgEl.onerror = () => {
-        console.warn('Error loading image:', imageUrl);
+        console.warn('Error loading image:', optimizedImageUrl);
         img.classList.remove('gallery__image--loading');
         img.classList.add('is-error');
       };
-      imgEl.src = imageUrl;
+      imgEl.src = optimizedImageUrl;
     } else if (!imageUrl || imageUrl.trim() === '') {
       console.warn('Empty image URL for element:', img);
       img.classList.remove('gallery__image--loading');
@@ -104,9 +120,18 @@ function applyLazyLoading(selector = '.gallery__image') {
 // Exponer funciones globalmente
 window.cyberduck = {
   cachedFetch,
+  optimizeImageUrl,
   applyLazyLoading,
   imageObserver
 };
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {
+      // no-op
+    });
+  });
+}
 
 /* =========================
    CYBERDUCK — slider simple
@@ -165,14 +190,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const imgElement = product.querySelector('.gallery__image img');
       if(imgElement){
         image = imgElement.src;
-        console.log('Found img element with src:', image);
       } else {
         // Fallback to dataset if img element not created yet (lazy loading)
         const galleryImage = product.querySelector('.gallery__image');
         image = galleryImage ? galleryImage.dataset.bgImage || '' : '';
-        console.log('No img element found, using dataset.bgImage:', image);
       }
-      console.log('Final image for product:', name, image);
       return {name, price, desc, image};
     }
 
@@ -488,12 +510,13 @@ document.addEventListener('DOMContentLoaded', function(){
           const name = product.NAME || product.name || product.nombre || 'Producto';
           const price = product.PRICE || product.price || product.precio || '';
           const image = product.IMAGE || product.image || product.imagen || '';
+          const optimizedThumb = optimizeImageUrl(image, { width: 120, quality: 64 });
           const formattedPrice = price ? `$${parseFloat(price).toLocaleString('es-CO')} COP` : '';
 
           return `
             <div class="search-result-item" style="display: flex; gap: 12px; padding: 12px; border-bottom: 1px solid var(--line); cursor: pointer;" onclick="window.location.href='./product.html'; localStorage.setItem('cyberduck:selectedProduct', JSON.stringify({name:'${name}',price:'${price}',image:'${image}',desc:'${product.DESC || product.desc || product.descripcion || ''}'}))">
               <div style="width: 60px; height: 60px; background: var(--panel); border-radius: 8px; overflow: hidden; flex-shrink: 0;">
-                ${image ? `<img src="${image}" alt="${name}" style="width: 100%; height: 100%; object-fit: cover;">` : ''}
+                ${image ? `<img src="${optimizedThumb}" alt="${name}" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover;">` : ''}
               </div>
               <div style="flex: 1;">
                 <div style="font-weight: 600; margin-bottom: 4px;">${name}</div>

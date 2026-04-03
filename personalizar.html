@@ -7,12 +7,11 @@
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <script src="./script.js"></script>
   <header class="header">
     <div class="container header__inner">
       <div class="brand">
         <a class="brand__logo-group" href="./index.html">
-          <img src="./imgs/logo.png" alt="Cyberduck logo" class="brand__img">
+          <img src="./imgs/logo.png" alt="Cyberduck logo" class="brand__img" decoding="async">
           <div class="brand__logo">CYBERDUCK</div>
         </a>
         <nav class="nav" aria-label="navegación principal">
@@ -62,10 +61,11 @@
     </div>
   </main>
 
+  <script src="./script.js"></script>
+
   <script>
     // Fetch products from Google Script and render them
-    fetch('https://script.google.com/macros/s/AKfycbztotFgcZHKbmTpEM0jEqtCOZqNtjH3DHaQgFf8up4KwtW9M08eprqP0wKYdKR8fRAO/exec')
-      .then(response => response.json())
+    window.cyberduck.cachedFetch('https://script.google.com/macros/s/AKfycbztotFgcZHKbmTpEM0jEqtCOZqNtjH3DHaQgFf8up4KwtW9M08eprqP0wKYdKR8fRAO/exec')
       .then(data => {
         console.log('API Response:', data); // Debug log
         const grid = document.getElementById('customize-grid');
@@ -103,8 +103,11 @@
             card.setAttribute('data-description', product.DESCRIPTION || `Personalización: ${product.NAME || product.name || 'personalizado'}`);
             card.style.cursor = 'pointer';
 
+            const sourceImage = product.IMAGE || product.image || product.img || '';
+            const optimized = window.cyberduck.optimizeImageUrl(sourceImage, { width: 360, quality: 70 });
+
             card.innerHTML = `
-              <div class="custom-thumb gallery__image" style="background-image: url('${product.IMAGE || product.image || product.img || ''}'); background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
+              <div class="custom-thumb gallery__image" style="background-image: url('${optimized}'); background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
               <div class="custom-meta">
                 <div class="custom-title">${product.NAME || product.name || 'Producto'}</div>
               </div>

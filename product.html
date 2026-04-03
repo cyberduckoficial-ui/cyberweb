@@ -10,7 +10,6 @@
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <script src="./script.js"></script>
   <header class="header">
     <div class="container header__inner">
       <div class="brand">
@@ -87,6 +86,8 @@
     </div>
   </footer>
 
+  <script src="./script.js"></script>
+
   <script>
     // Populate product data from localStorage
     (function(){
@@ -121,12 +122,16 @@
         if(image){
           // Create an img element for better display
           const actualImg = document.createElement('img');
-          actualImg.src = image.replace(/^url\(['"]?/, '').replace(/['"]?\)$/, ''); // Remove url() wrapper if present
+          const rawSource = image.replace(/^url\(['"]?/, '').replace(/['"]?\)$/, ''); // Remove url() wrapper if present
+          actualImg.src = window.cyberduck && window.cyberduck.optimizeImageUrl
+            ? window.cyberduck.optimizeImageUrl(rawSource, { width: 960, quality: 74 })
+            : rawSource;
           actualImg.style.width = '100%';
           actualImg.style.height = '100%';
           actualImg.style.objectFit = 'contain';
           actualImg.style.borderRadius = '16px';
           actualImg.alt = title;
+          actualImg.decoding = 'async';
           imgEl.innerHTML = '';
           imgEl.appendChild(actualImg);
         } else {
