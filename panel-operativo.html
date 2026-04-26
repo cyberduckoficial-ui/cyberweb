@@ -175,6 +175,164 @@
     @media (max-width: 980px) {
       .ops-layout { grid-template-columns: 1fr; }
     }
+
+    /* ── Analytics Dashboard ── */
+    .analytics-section { margin-top: 28px; }
+    .analytics-section-title {
+      font-family: Oxanium, Inter, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-size: 11px;
+      color: var(--neonG, #74f6a0);
+      margin: 0 0 12px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .analytics-section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
+    .analytics-kpis {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .analytics-kpi {
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(116,246,160,.06), rgba(255,255,255,.02));
+      padding: 13px 14px;
+    }
+    .analytics-kpi__label {
+      margin: 0 0 6px;
+      font-family: Oxanium, Inter, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      font-size: 9px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .analytics-kpi__value {
+      margin: 0;
+      font-weight: 900;
+      font-size: clamp(18px, 2.2vw, 26px);
+      line-height: 1;
+    }
+    .analytics-kpi__sub {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .analytics-grid--3 {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+    @media (max-width: 860px) {
+      .analytics-grid, .analytics-grid--3 { grid-template-columns: 1fr; }
+    }
+    .an-card {
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      overflow: hidden;
+    }
+    .an-card__head {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--line);
+      font-family: Oxanium, Inter, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .an-card__body { padding: 12px 14px; }
+    .an-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+    .an-bar-row:last-child { margin-bottom: 0; }
+    .an-bar-label { min-width: 90px; color: var(--muted); font-size: 11px; }
+    .an-bar-track {
+      flex: 1;
+      height: 6px;
+      background: rgba(255,255,255,.06);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .an-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--neonG, #74f6a0), var(--neonB, #4dd0e1));
+      transition: width .6s cubic-bezier(.4,0,.2,1);
+    }
+    .an-bar-val { min-width: 32px; text-align: right; font-size: 11px; font-weight: 700; }
+    .an-sessions-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .an-sessions-table th {
+      font-family: Oxanium, Inter, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: 9px;
+      color: var(--muted);
+      text-align: left;
+      padding: 0 8px 8px;
+      font-weight: 800;
+    }
+    .an-sessions-table td {
+      padding: 6px 8px;
+      border-top: 1px solid rgba(255,255,255,.05);
+      vertical-align: middle;
+    }
+    .an-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+    .an-dot--mobile { background: var(--neonB, #4dd0e1); }
+    .an-dot--desktop { background: var(--neonG, #74f6a0); }
+    .an-dot--tablet { background: #ffd166; }
+    .an-loading {
+      text-align: center;
+      padding: 28px;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: .08em;
+    }
+    .an-error {
+      text-align: center;
+      padding: 20px;
+      color: #ff6b6b;
+      font-size: 12px;
+    }
+    .an-refresh-btn {
+      font-size: 10px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: Oxanium, Inter, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      transition: border-color .2s, color .2s;
+    }
+    .an-refresh-btn:hover { border-color: var(--neonG, #74f6a0); color: var(--neonG, #74f6a0); }
   </style>
 </head>
 <body>
@@ -275,6 +433,210 @@
         </div>
       </section>
     </div>
+
+    <!-- ══════════════════════════════════════
+           ANALYTICS DASHBOARD
+      ══════════════════════════════════════ -->
+      <section class="analytics-section" id="analyticsDashboard">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <p class="analytics-section-title">📊 Analytics de visitantes</p>
+          <button class="an-refresh-btn" id="anRefresh">↺ Actualizar</button>
+        </div>
+
+        <!-- KPIs -->
+        <div class="analytics-kpis" id="anKpis">
+          <div class="an-loading">Cargando métricas…</div>
+        </div>
+
+        <!-- Fila 1: páginas + dispositivos + referrers -->
+        <div class="analytics-grid analytics-grid--3" id="anRow1">
+          <div class="an-card">
+            <div class="an-card__head">Páginas más visitadas</div>
+            <div class="an-card__body" id="anPages"><div class="an-loading">…</div></div>
+          </div>
+          <div class="an-card">
+            <div class="an-card__head">Dispositivos</div>
+            <div class="an-card__body" id="anDevices"><div class="an-loading">…</div></div>
+          </div>
+          <div class="an-card">
+            <div class="an-card__head">Origen del tráfico</div>
+            <div class="an-card__body" id="anReferrers"><div class="an-loading">…</div></div>
+          </div>
+        </div>
+
+        <!-- Fila 2: engagement + sesiones recientes -->
+        <div class="analytics-grid" style="margin-top:12px;">
+          <div class="an-card">
+            <div class="an-card__head">Engagement promedio por página</div>
+            <div class="an-card__body" id="anEngagement"><div class="an-loading">…</div></div>
+          </div>
+          <div class="an-card">
+            <div class="an-card__head">Últimas 10 sesiones</div>
+            <div class="an-card__body" id="anRecent"><div class="an-loading">…</div></div>
+          </div>
+        </div>
+      </section>
+
+  <script>
+  (function () {
+    const ENDPOINT = 'https://script.google.com/macros/s/AKfycbzdHugbApj8bUvF6UQ9g-LolHPp_3DN7MbVh83_muXlalJTmV0_CfTwlQsci_8efTQ/exec';
+
+    function pct(val, max) {
+      return max > 0 ? Math.round((val / max) * 100) : 0;
+    }
+
+    function fmtTime(secs) {
+      const s = Number(secs) || 0;
+      if (s < 60) return s + 's';
+      return Math.floor(s / 60) + 'm ' + (s % 60) + 's';
+    }
+
+    function renderBars(containerId, items, colorFn) {
+      const el = document.getElementById(containerId);
+      if (!items.length) { el.innerHTML = '<div class="an-loading">Sin datos</div>'; return; }
+      const maxVal = Math.max(...items.map(i => i.val));
+      el.innerHTML = items.map(item => `
+        <div class="an-bar-row">
+          <span class="an-bar-label">${item.label}</span>
+          <div class="an-bar-track">
+            <div class="an-bar-fill" style="width:${pct(item.val, maxVal)}%;${colorFn ? colorFn(item) : ''}"></div>
+          </div>
+          <span class="an-bar-val">${item.val}</span>
+        </div>
+      `).join('');
+    }
+
+    function render(sessions) {
+      if (!sessions.length) {
+        document.getElementById('anKpis').innerHTML = '<div class="an-loading">Sin sesiones registradas aún.</div>';
+        return;
+      }
+
+      // ── KPIs ──
+      const totalSessions   = sessions.length;
+      const uniquePages     = new Set(sessions.map(s => s.pagina)).size;
+      const avgTime         = Math.round(sessions.reduce((a, s) => a + (Number(s.tiempo_en_pagina_s) || 0), 0) / totalSessions);
+      const avgScroll       = Math.round(sessions.reduce((a, s) => a + (Number(s.max_scroll_pct) || 0), 0) / totalSessions);
+      const checkoutReached = sessions.filter(s => s.llego_checkout === 'SI').length;
+      const cartAbandons    = sessions.filter(s => s.abandono_carrito === 'SI').length;
+      const mobile          = sessions.filter(s => s.dispositivo === 'mobile').length;
+      const convRate        = totalSessions > 0 ? ((checkoutReached / totalSessions) * 100).toFixed(1) : '0';
+
+      document.getElementById('anKpis').innerHTML = `
+        <div class="analytics-kpi">
+          <p class="analytics-kpi__label">Sesiones totales</p>
+          <p class="analytics-kpi__value">${totalSessions}</p>
+          <p class="analytics-kpi__sub">${uniquePages} páginas distintas</p>
+        </div>
+        <div class="analytics-kpi">
+          <p class="analytics-kpi__label">Tiempo promedio</p>
+          <p class="analytics-kpi__value">${fmtTime(avgTime)}</p>
+          <p class="analytics-kpi__sub">Scroll promedio: ${avgScroll}%</p>
+        </div>
+        <div class="analytics-kpi">
+          <p class="analytics-kpi__label">Llegaron a checkout</p>
+          <p class="analytics-kpi__value">${checkoutReached}</p>
+          <p class="analytics-kpi__sub">Tasa: ${convRate}%</p>
+        </div>
+        <div class="analytics-kpi">
+          <p class="analytics-kpi__label">Abandonos de carrito</p>
+          <p class="analytics-kpi__value" style="color:${cartAbandons > 0 ? '#ff6b6b' : 'inherit'}">${cartAbandons}</p>
+          <p class="analytics-kpi__sub">${mobile} visitas móvil</p>
+        </div>
+      `;
+
+      // ── Páginas ──
+      const pageCount = {};
+      sessions.forEach(s => { pageCount[s.pagina] = (pageCount[s.pagina] || 0) + 1; });
+      const pageItems = Object.entries(pageCount)
+        .sort((a, b) => b[1] - a[1]).slice(0, 6)
+        .map(([label, val]) => ({ label: label.replace('.html',''), val }));
+      renderBars('anPages', pageItems);
+
+      // ── Dispositivos ──
+      const devCount = {};
+      sessions.forEach(s => { devCount[s.dispositivo] = (devCount[s.dispositivo] || 0) + 1; });
+      const devItems = Object.entries(devCount).sort((a, b) => b[1] - a[1])
+        .map(([label, val]) => ({ label, val }));
+      renderBars('anDevices', devItems, item => {
+        const colors = { mobile: '#4dd0e1', desktop: '#74f6a0', tablet: '#ffd166' };
+        return `background:${colors[item.label] || '#74f6a0'};`;
+      });
+
+      // ── Referrers ──
+      const refCount = {};
+      sessions.forEach(s => { refCount[s.referrer] = (refCount[s.referrer] || 0) + 1; });
+      const refItems = Object.entries(refCount).sort((a, b) => b[1] - a[1])
+        .map(([label, val]) => ({ label, val }));
+      renderBars('anReferrers', refItems);
+
+      // ── Engagement por página ──
+      const pageTime = {};
+      const pageHits = {};
+      sessions.forEach(s => {
+        const p = s.pagina.replace('.html','');
+        pageTime[p] = (pageTime[p] || 0) + (Number(s.tiempo_en_pagina_s) || 0);
+        pageHits[p] = (pageHits[p] || 0) + 1;
+      });
+      const engItems = Object.entries(pageTime)
+        .map(([label, total]) => ({ label, val: Math.round(total / pageHits[label]) }))
+        .sort((a, b) => b.val - a.val).slice(0, 6);
+      const engEl = document.getElementById('anEngagement');
+      engEl.innerHTML = engItems.map(item => `
+        <div class="an-bar-row">
+          <span class="an-bar-label">${item.label}</span>
+          <div class="an-bar-track">
+            <div class="an-bar-fill" style="width:${pct(item.val, Math.max(...engItems.map(i=>i.val)))}%"></div>
+          </div>
+          <span class="an-bar-val">${fmtTime(item.val)}</span>
+        </div>
+      `).join('');
+
+      // ── Últimas sesiones ──
+      const recent = [...sessions].slice(-10).reverse();
+      const dotClass = d => d === 'mobile' ? 'an-dot--mobile' : d === 'tablet' ? 'an-dot--tablet' : 'an-dot--desktop';
+      document.getElementById('anRecent').innerHTML = `
+        <div style="overflow:auto;">
+          <table class="an-sessions-table">
+            <thead><tr>
+              <th>Página</th><th>Origen</th><th>Tiempo</th><th>Scroll</th>
+            </tr></thead>
+            <tbody>
+              ${recent.map(s => `<tr>
+                <td><span class="an-dot ${dotClass(s.dispositivo)}"></span>${(s.pagina||'').replace('.html','')}</td>
+                <td style="color:var(--muted)">${s.referrer||'—'}</td>
+                <td>${fmtTime(s.tiempo_en_pagina_s)}</td>
+                <td>${Number(s.max_scroll_pct)||0}%</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function loadAnalytics() {
+      document.getElementById('anKpis').innerHTML = '<div class="an-loading">Cargando…</div>';
+      ['anPages','anDevices','anReferrers','anEngagement','anRecent']
+        .forEach(id => { document.getElementById(id).innerHTML = '<div class="an-loading">…</div>'; });
+
+      fetch(ENDPOINT + '?action=sessions')
+        .then(r => r.json())
+        .then(data => {
+          if (data.ok && Array.isArray(data.sessions)) {
+            render(data.sessions);
+          } else {
+            document.getElementById('anKpis').innerHTML = '<div class="an-error">Error al cargar datos.</div>';
+          }
+        })
+        .catch(() => {
+          document.getElementById('anKpis').innerHTML = '<div class="an-error">No se pudo conectar con el Sheet.</div>';
+        });
+    }
+
+    document.getElementById('anRefresh').addEventListener('click', loadAnalytics);
+    loadAnalytics();
+  })();
+  </script>
   </main>
 
   <script src="./script.js"></script>
