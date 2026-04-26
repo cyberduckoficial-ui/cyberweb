@@ -1,0 +1,12 @@
+material_codigo,material_nombre,unidad_material,tipo_material,estado
+MAT-ACC-RESINA-METAL,Resina/acabado metálico,g,SOLIDO,ACTIVO
+MAT-TXT-ALGODON-EST,Textil algodón estampado,g,SOLIDO,ACTIVO
+MAT-ACC-RESINA-COLLAR,Resina/acrílico para collar,g,SOLIDO,ACTIVO
+MAT-TXT-POLY-BASIC,Textil base poliéster,g,SOLIDO,ACTIVO
+MAT-ACC-RESINA-GARG,Resina/acrílico para gargantilla,g,SOLIDO,ACTIVO
+MAT-GEN-SOLIDO,Material sólido genérico,g,SOLIDO,ACTIVO
+MAT-3DP-PLA-BASIC,Filamento PLA,g,SOLIDO,ACTIVO
+MAT-ACC-RESINA-MANILLA,Resina/acrílico para manilla,g,SOLIDO,ACTIVO
+MAT-MIX-NUEVO,Material sólido mixto (línea nuevo),g,SOLIDO,ACTIVO
+MAT-ACC-MIX-OTROS,Material sólido mixto accesorios,g,SOLIDO,ACTIVO
+MAT-3DP-PLA-CUSTOM,Filamento PLA personalizado,g,SOLIDO,ACTIVO

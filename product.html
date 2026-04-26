@@ -89,97 +89,180 @@
   <script src="./script.js"></script>
 
   <script>
-    // Populate product data from localStorage
-    (function(){
-      try{
+    function readSelectedProduct() {
+      try {
         const raw = localStorage.getItem('cyberduck:selectedProduct');
-        const data = raw ? JSON.parse(raw) : null;
-        const title = data && data.name ? data.name : 'Producto';
-        const price = data && data.price ? (typeof data.price === 'number' ? `$${data.price.toLocaleString('es-CO')} COP` : data.price) : '—';
-        let desc = data && data.desc ? data.desc : 'Descripción breve del producto.';
-        const image = data && data.image ? data.image : '';
+        return raw ? JSON.parse(raw) : null;
+      } catch (error) {
+        console.warn('No se pudo leer el producto seleccionado:', error);
+        return null;
+      }
+    }
 
-        if(data && data.category === 'personalizado'){
-          // Fetch title and description from Google Script
-          fetch('https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLhWlgY5Fdl5wowNtL4vPepVvILg5ZlIkwyrmm8HyRWxQRJ2qLCi-v7gN3VZ8ErRIByWR8T9LLFLDejPriNlwB0WAcHX9Lpe4tkI1F5SeJOAD--X04Qm_dmy9eO3VYjfG5s1GNfuEgm4v4XEooMJU9EFWM_3rq10vYMJvq8tJkpbzUbStrMtLGljkjuPxR1sYE_75OjCaXE90EHpy1ZLSHTQGfItYuwLnDEG3ZYB-7hgAzpA3qdGjHI0T0N7Ac3p0XV9fvqF5pBNPE-ctBy1PDrUEM4C5w&lib=M-YxSEsKo8g88BRj95yNKp5OjAoyKQGY4')
-            .then(response => response.json())
-            .then(scriptData => {
-              if(scriptData.title) document.getElementById('pd-title').textContent = scriptData.title;
-              if(scriptData.description) document.getElementById('pd-excerpt').innerHTML = scriptData.description;
-            })
-            .catch(e => {
-              console.warn('Failed to fetch personalization data:', e);
-              desc = 'Personalización del producto<br><br>Para realizar tu pedido personalizado, envíanos la siguiente información:<br><br>Tipo de producto que deseas personalizar<br><br>Medidas (largo × ancho)<br><br>¿Deseas que lo pintemos?<br><br>Con estos datos, escríbenos directamente al 310 818 2572 y con gusto te asesoramos en todo el proceso para que tu producto quede justo como lo imaginas.';
-              document.getElementById('pd-excerpt').innerHTML = desc;
-            });
-        }
+    function formatProductPrice(data) {
+      if (!data || data.price === undefined || data.price === null || data.price === '') {
+        return '—';
+      }
 
-        document.getElementById('pd-title').textContent = title;
-        document.getElementById('pd-price').textContent = price;
-        document.getElementById('pd-excerpt').innerHTML = desc;
+      return typeof data.price === 'number' ? '$' + data.price.toLocaleString('es-CO') + ' COP' : data.price;
+    }
 
-        const imgEl = document.getElementById('pd-image');
-        if(image){
-          // Create an img element for better display
-          const actualImg = document.createElement('img');
-          const rawSource = image.replace(/^url\(['"]?/, '').replace(/['"]?\)$/, ''); // Remove url() wrapper if present
-          actualImg.src = window.cyberduck && window.cyberduck.optimizeImageUrl
-            ? window.cyberduck.optimizeImageUrl(rawSource, { width: 960, quality: 74 })
-            : rawSource;
-          actualImg.style.width = '100%';
-          actualImg.style.height = '100%';
-          actualImg.style.objectFit = 'contain';
-          actualImg.style.borderRadius = '16px';
-          actualImg.alt = title;
-          actualImg.decoding = 'async';
-          imgEl.innerHTML = '';
-          imgEl.appendChild(actualImg);
-        } else {
-          imgEl.innerHTML = '';
-          imgEl.style.background = 'linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01))';
-        }
-      }catch(e){ console.warn(e); }
+    function updateProductText(data) {
+      const titleEl = document.getElementById('pd-title');
+      const priceEl = document.getElementById('pd-price');
+      const excerptEl = document.getElementById('pd-excerpt');
 
-      // Add simple add-to-cart handler (stores in localStorage cart array)
-      document.getElementById('pd-add').addEventListener('click', function(){
-        try{
-          const raw = localStorage.getItem('cyberduck:selectedProduct');
-          let item = raw ? JSON.parse(raw) : { name: document.getElementById('pd-title').textContent };
-          // Ensure price is set from the page if not in localStorage
-          if (!item.price) {
-            item.price = document.getElementById('pd-price').textContent || '0';
+      if (titleEl) titleEl.textContent = data && data.name ? data.name : 'Producto';
+      if (priceEl) priceEl.textContent = formatProductPrice(data);
+      if (excerptEl) excerptEl.innerHTML = data && data.desc ? data.desc : 'Descripción breve del producto.';
+
+      return { titleEl, excerptEl };
+    }
+
+    function updateProductImage(data) {
+      const imageEl = document.getElementById('pd-image');
+      if (!imageEl) {
+        return;
+      }
+
+      imageEl.innerHTML = '';
+      imageEl.style.background = '';
+
+      if (!data || !data.image) {
+        imageEl.style.background = 'linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01))';
+        return;
+      }
+
+      const title = data.name || 'Producto';
+      const actualImg = document.createElement('img');
+      const rawSource = data.image.replace(/^url\(['"]?/, '').replace(/['"]?\)$/, '');
+      const optimizedSource = globalThis.cyberduck && globalThis.cyberduck.optimizeImageUrl
+        ? globalThis.cyberduck.optimizeImageUrl(rawSource, { width: 960, quality: 74 })
+        : rawSource;
+
+      actualImg.src = optimizedSource;
+      actualImg.style.width = '100%';
+      actualImg.style.height = '100%';
+      actualImg.style.objectFit = 'contain';
+      actualImg.style.borderRadius = '16px';
+      actualImg.alt = title;
+      actualImg.decoding = 'async';
+      imageEl.appendChild(actualImg);
+    }
+
+    function loadPersonalizationContent(data, excerptEl, titleEl) {
+      if (!data || data.category !== 'personalizado') {
+        return;
+      }
+
+      fetch('https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLhWlgY5Fdl5wowNtL4vPepVvILg5ZlIkwyrmm8HyRWxQRJ2qLCi-v7gN3VZ8ErRIByWR8T9LLFLDejPriNlwB0WAcHX9Lpe4tkI1FSeJOAD--X04Qm_dmy9eO3VYjfG5s1GNfuEgm4v4XEooMJU9EFWM_3rq10vYMJvq8tJkpbzUbStrMtLGljkjuPxR1sYE_75OjCaXE90EHpy1ZLSHTQGfItYuwLnDEG3ZYB-7hgAzpA3qdGjHI0T0N7Ac3p0XV9fvqF5pBNPE-ctBy1PDrUEM4C5w&lib=M-YxSEsKo8g88BRj95yNKp5OjAoyKQGY4')
+        .then(response => response.json())
+        .then(scriptData => {
+          const fetchedTitle = scriptData && scriptData.title ? scriptData.title : null;
+          const fetchedDescription = scriptData && scriptData.description ? scriptData.description : null;
+
+          if (fetchedTitle && titleEl) titleEl.textContent = fetchedTitle;
+          if (fetchedDescription && excerptEl) excerptEl.innerHTML = fetchedDescription;
+        })
+        .catch(error => {
+          console.warn('Failed to fetch personalization data:', error);
+          if (excerptEl) {
+            excerptEl.innerHTML = '<strong>¿Cómo cotizar tu idea?</strong><br><br>Cotizar con nosotros es muy fácil, solo tienes que enviar <strong>tu idea, imágenes de referencia o un boceto del producto que deseas materializar, indicando las dimensiones aproximadas y la cantidad. Nuestro equipo revisará tu solicitud para comprender tu narrativa y lo que quieres representar. En breve te contactaremos por WhatsApp para definir los detalles técnicos, confirmar la viabilidad de impresión en 3D y enviarte el valor final para iniciar juntos el proceso de co-creación.</strong>';
           }
-          const cartRaw = localStorage.getItem('cyberduck:cart');
-          const cart = cartRaw ? JSON.parse(cartRaw) : [];
-          cart.push(item);
-          localStorage.setItem('cyberduck:cart', JSON.stringify(cart));
+        });
+    }
 
-          // Update cart UI using global renderCart if available
-          if (window.cyberduck && window.cyberduck.renderCart) {
-            window.cyberduck.renderCart();
-          } else {
-            // Fallback manual update
-            const cartCount = document.getElementById('cartCount');
-            if (cartCount) cartCount.textContent = cart.length;
-            let total = 0;
-            cart.forEach(it => {
-              const num = (it.price || '').toString().replace(/\$/g, '').replace(/\./g, '').replace(',', '.');
-              const val = parseFloat(num) || 0;
-              total += val;
-            });
-            const cartTotal = document.getElementById('cartTotal');
-            if (cartTotal) cartTotal.textContent = 'Total: $' + (total ? total.toLocaleString('es-CO') : '0');
-          }
-          alert('Producto añadido al carrito');
-        }catch(e){ console.warn(e); }
+    function renderProductPage() {
+      const data = readSelectedProduct();
+      const { titleEl, excerptEl } = updateProductText(data);
+      updateProductImage(data);
+      loadPersonalizationContent(data, excerptEl, titleEl);
+    }
+
+    function getSelectedProductItem() {
+      const fallbackItem = {
+        name: document.getElementById('pd-title').textContent,
+        price: document.getElementById('pd-price').textContent || '0'
+      };
+
+      let item = fallbackItem;
+
+      try {
+        const raw = localStorage.getItem('cyberduck:selectedProduct');
+        if (raw) {
+          item = JSON.parse(raw);
+        }
+      } catch (error) {
+        console.warn('No se pudo leer el producto seleccionado para el carrito:', error);
+      }
+
+      if (globalThis.cyberduck && globalThis.cyberduck.normalizeCartItem) {
+        item = globalThis.cyberduck.normalizeCartItem(item);
+      }
+
+      return item;
+    }
+
+    function storeCartItem(item) {
+      let cart = [];
+
+      try {
+        const cartRaw = localStorage.getItem('cyberduck:cart');
+        cart = cartRaw ? JSON.parse(cartRaw) : [];
+      } catch (error) {
+        console.warn('No se pudo leer el carrito:', error);
+      }
+
+      cart.push(item);
+      const normalizedCart = globalThis.cyberduck ? globalThis.cyberduck.normalizeCartItems(cart) : cart;
+      localStorage.setItem('cyberduck:cart', JSON.stringify(normalizedCart));
+      return normalizedCart;
+    }
+
+    function refreshCartPreview(cart) {
+      if (globalThis.cyberduck && globalThis.cyberduck.renderCart) {
+        globalThis.cyberduck.renderCart();
+        return;
+      }
+
+      const cartCount = document.getElementById('cartCount');
+      if (cartCount) cartCount.textContent = cart.length;
+
+      let total = 0;
+      cart.forEach(it => {
+        const val = globalThis.cyberduck ? globalThis.cyberduck.normalizeCurrencyValue(it.price) || 0 : Number.parseFloat((it.price || '0').toString()) || 0;
+        total += val;
       });
 
-      // Back button behavior
-      const backBtn = document.getElementById('pd-back');
-      if(backBtn){
-        backBtn.addEventListener('click', function(e){ e.preventDefault(); window.history.back(); });
+      const cartTotal = document.getElementById('cartTotal');
+      if (cartTotal) cartTotal.textContent = 'Total: $' + (total ? total.toLocaleString('es-CO') : '0');
+    }
+
+    function addSelectedProductToCart() {
+      const item = getSelectedProductItem();
+      const cart = storeCartItem(item);
+      refreshCartPreview(cart);
+      alert('Producto añadido al carrito');
+    }
+
+    function initializeProductPage() {
+      renderProductPage();
+
+      const addBtn = document.getElementById('pd-add');
+      if (addBtn) {
+        addBtn.addEventListener('click', addSelectedProductToCart);
       }
-    })();
+
+      const backBtn = document.getElementById('pd-back');
+      if (backBtn) {
+        backBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          globalThis.history.back();
+        });
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', initializeProductPage);
   </script>
 </body>
 </html>

@@ -51,6 +51,7 @@
           </div>
           <a class="nav__link" href="./media.html">media</a>
           <a class="nav__link" href="./nosotros.html">nosotros</a>
+          <a class="nav__link" href="./panel-operativo.html">panel operativo</a>
           <a class="nav__custom" href="./personalizar.html">✨ personaliza tu 3D ✨</a>
         </nav>
       </div>
@@ -276,24 +277,24 @@
           // Add click event to navigate to product.html
           item.addEventListener('click', () => {
             // Store product data in localStorage
-            const priceValue = parseFloat(product.PRICE);
+            const priceValue = Number.parseFloat(product.PRICE);
             const productData = {
               name: product.NAME || 'Producto',
-              price: !isNaN(priceValue) ? priceValue : null,
+              price: Number.isNaN(priceValue) ? null : priceValue,
               image: product.IMAGE || '',
               desc: product.DESC || 'Descripción breve del producto.'
             };
             localStorage.setItem('cyberduck:selectedProduct', JSON.stringify(productData));
             // Navigate to product.html
-            window.location.href = './product.html';
+            globalThis.location.href = './product.html';
           });
 
           const imageDiv = document.createElement('div');
           imageDiv.className = 'gallery__image';
           if (product.IMAGE) {
             const img = document.createElement('img');
-            const sourceImage = window.cyberduck && window.cyberduck.optimizeImageUrl
-              ? window.cyberduck.optimizeImageUrl(product.IMAGE, { width: 720, quality: 72 })
+            const sourceImage = globalThis.cyberduck && globalThis.cyberduck.optimizeImageUrl
+              ? globalThis.cyberduck.optimizeImageUrl(product.IMAGE, { width: 720, quality: 72 })
               : product.IMAGE;
             img.src = sourceImage;
             img.alt = product.NAME || 'Producto';
@@ -311,7 +312,7 @@
 
           const priceP = document.createElement('p');
           priceP.className = 'gallery__price';
-          priceP.textContent = product.PRICE ? `$${parseFloat(product.PRICE).toLocaleString('es-CO')} COP` : 'Precio no disponible';
+          priceP.textContent = product.PRICE ? `$${Number.parseFloat(product.PRICE).toLocaleString('es-CO')} COP` : 'Precio no disponible';
 
           metaDiv.appendChild(nameP);
           metaDiv.appendChild(priceP);

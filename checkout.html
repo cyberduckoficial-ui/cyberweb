@@ -73,6 +73,15 @@
 
             <input type="hidden" id="totalInput" name="total" value="" />
             <input type="hidden" id="cartInput" name="productos" value="" />
+            <input type="hidden" id="orderIdInput" name="orderId" value="" />
+            <input type="hidden" id="orderPayloadInput" name="orderPayload" value="" />
+            <input type="hidden" id="salePayloadInput" name="salePayload" value="" />
+            <input type="hidden" id="inventoryPayloadInput" name="inventoryPayload" value="" />
+            <input type="hidden" id="checkoutEnvelopeInput" name="checkoutEnvelope" value="" />
+            <input type="hidden" id="submissionFingerprintInput" name="submissionFingerprint" value="" />
+            <input type="hidden" id="orderFlowStatusInput" name="orderFlowStatus" value="CREADA" />
+            <input type="hidden" id="checkoutStatusInput" name="checkoutStatus" value="PENDING" />
+            <input type="hidden" id="theoreticalSolidInput" name="consumoTeoricoSolidTotal" value="0" />
 
             <div style="display:flex; gap:10px; align-items:center;">
               <button id="checkoutSubmit" class="btn btn--primary" type="submit">Enviar pedido →</button>
@@ -85,6 +94,7 @@
             <h3 style="margin:0 0 10px;">Resumen del carrito</h3>
             <div id="checkoutItems" style="display:flex; flex-direction:column; gap:10px; max-height:420px; overflow:auto; margin-bottom:12px;"></div>
             <div id="checkoutTotal" style="font-weight:900; margin-top:6px;">Total: —</div>
+            <div id="checkoutOpsSummary" style="margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,.08); color:var(--muted); font-size:13px; line-height:1.6;"></div>
           </aside>
         </div>
       </section>
@@ -95,39 +105,107 @@
 
   <script>
     (function(){
-      function readCart(){ try{ const raw = localStorage.getItem('cyberduck:cart'); return raw ? JSON.parse(raw) : []; }catch(e){ return []; } }
-      function formatPrice(p){ return p.toLocaleString('es-CO'); }
+      function readCart(){
+        try {
+          const raw = localStorage.getItem('cyberduck:cart');
+          const parsed = raw ? JSON.parse(raw) : [];
+          return globalThis.cyberduck ? globalThis.cyberduck.normalizeCartItems(parsed) : parsed;
+        } catch (error) {
+          console.warn('No se pudo leer el carrito:', error);
+          return [];
+        }
+      }
+
+      function formatPrice(p){ return Number(p || 0).toLocaleString('es-CO'); }
 
       const itemsWrap = document.getElementById('checkoutItems');
       const totalEl = document.getElementById('checkoutTotal');
+      const opsSummary = document.getElementById('checkoutOpsSummary');
       const cart = readCart();
-      let total = 0;
       const submitBtn = document.getElementById('checkoutSubmit');
-      if(!cart.length){
+      const totals = globalThis.cyberduck ? globalThis.cyberduck.computeCartTotals(cart) : cart.reduce((acc, item) => {
+        const quantity = Number.parseInt(item.quantity, 10) || 1;
+        const unitPrice = Number(item.unitPrice ?? item.price ?? 0) || 0;
+        acc.quantity += quantity;
+        acc.subtotal += unitPrice * quantity;
+        return acc;
+      }, { quantity: 0, subtotal: 0, estimatedCost: 0 });
+
+      if(cart.length === 0){
         itemsWrap.innerHTML = '<div style="color:var(--muted)">No hay productos en el carrito.</div>';
         if(submitBtn){ submitBtn.classList.add('is-disabled'); submitBtn.setAttribute('aria-disabled','true'); }
-      } else {
-        if(submitBtn){ submitBtn.classList.remove('is-disabled'); submitBtn.removeAttribute('aria-disabled'); }
       }
+      if(cart.length > 0 && submitBtn){
+        submitBtn.classList.remove('is-disabled');
+        submitBtn.removeAttribute('aria-disabled');
+      }
+
       cart.forEach(it => {
         const el = document.createElement('div');
         el.style.display='flex'; el.style.gap='8px'; el.style.alignItems='center';
-        const priceDisplay = typeof it.price === 'number' ? `$${it.price.toLocaleString('es-CO')} COP` : (it.price || '');
-        el.innerHTML = '<div style="width:56px;height:56px;border-radius:8px;background-size:cover;background-position:center;'+(it.image?('background-image:'+ (it.image.indexOf('url(')===0?it.image:'url('+it.image+')')):'')+'"></div>'+
+        const priceDisplay = Number.isFinite(it.lineTotal) ? `$${formatPrice(it.lineTotal)} COP` : '';
+        let backgroundImage = '';
+        if (it.image) {
+          backgroundImage = it.image.indexOf('url(') === 0 ? it.image : 'url(' + it.image + ')';
+          backgroundImage = 'background-image:' + backgroundImage + ';';
+        }
+        el.innerHTML = '<div style="width:56px;height:56px;border-radius:8px;background-size:cover;background-position:center;' + backgroundImage + '"></div>' +
           '<div style="flex:1"><div style="font-weight:800">'+(it.name||'Producto')+'</div><div style="color:var(--muted);font-size:13px">'+priceDisplay+'</div></div>';
         itemsWrap.appendChild(el);
-        const num = typeof it.price === 'number' ? it.price : parseFloat((it.price||'').toString().replace(/\$/g, '').replace(/\./g, '').replace(',', '.')) || 0;
-        total += num;
       });
-      totalEl.textContent = 'Total: $' + (total ? formatPrice(total) : '0');
+      totalEl.textContent = 'Total: $' + (totals.subtotal ? formatPrice(totals.subtotal) : '0');
+
+      if (opsSummary) {
+        const theoreticalLines = globalThis.cyberduck
+          ? globalThis.cyberduck.computeTheoreticalConsumption(cart)
+          : [];
+        const theoreticalSolidTotal = theoreticalLines.reduce((acc, line) => acc + (line.theoreticalSolid || 0), 0);
+
+        opsSummary.innerHTML = [
+          '<strong>Resumen operativo</strong>',
+          '<div>Items: ' + totals.quantity + '</div>',
+          '<div>Subtotal estimado: $' + formatPrice(totals.subtotal) + '</div>',
+          '<div>Consumo teórico sólido: ' + theoreticalSolidTotal.toFixed(2) + ' g</div>',
+          '<div>Estado inicial de orden: CREADA</div>'
+        ].join('');
+
+        const theoreticalSolidInput = document.getElementById('theoreticalSolidInput');
+        if (theoreticalSolidInput) {
+          theoreticalSolidInput.value = theoreticalSolidTotal.toFixed(2);
+        }
+      }
 
       // Set total in hidden input
       const totalInput = document.getElementById('totalInput');
-      if(totalInput) totalInput.value = total.toString();
+      if(totalInput) totalInput.value = String(totals.subtotal || 0);
 
       // Set cart products in hidden input
       const cartInput = document.getElementById('cartInput');
       if(cartInput) cartInput.value = JSON.stringify(cart);
+
+      const orderIdInput = document.getElementById('orderIdInput');
+      const orderPayloadInput = document.getElementById('orderPayloadInput');
+      const salePayloadInput = document.getElementById('salePayloadInput');
+      const inventoryPayloadInput = document.getElementById('inventoryPayloadInput');
+      const checkoutEnvelopeInput = document.getElementById('checkoutEnvelopeInput');
+      const submissionFingerprintInput = document.getElementById('submissionFingerprintInput');
+      const orderFlowStatusInput = document.getElementById('orderFlowStatusInput');
+      const checkoutStatusInput = document.getElementById('checkoutStatusInput');
+
+      function writeCheckoutPayload(envelope) {
+        if (!envelope || !envelope.orderPayload) {
+          return;
+        }
+
+        if (orderIdInput) orderIdInput.value = envelope.orderPayload.orderId || '';
+        if (orderPayloadInput) orderPayloadInput.value = JSON.stringify(envelope.orderPayload);
+        if (salePayloadInput) salePayloadInput.value = JSON.stringify(envelope.salePayload || {});
+        if (inventoryPayloadInput) inventoryPayloadInput.value = JSON.stringify(envelope.inventoryPayload || {});
+        if (checkoutEnvelopeInput) checkoutEnvelopeInput.value = JSON.stringify(envelope);
+        if (submissionFingerprintInput) submissionFingerprintInput.value = envelope.submissionFingerprint || '';
+        if (orderFlowStatusInput) orderFlowStatusInput.value = envelope.orderPayload.flowStatus || 'CREADA';
+        if (checkoutStatusInput) checkoutStatusInput.value = envelope.orderPayload.checkout?.status || 'PENDING';
+      }
 
       // handle submit
       const form = document.getElementById('checkoutForm');
@@ -140,6 +218,30 @@
         if(!fullname||!email||!phone){
           alert('Por favor completa los datos obligatorios.');
           return;
+        }
+
+        const checkoutEnvelope = globalThis.cyberduck
+          ? globalThis.cyberduck.buildCheckoutSubmissionEnvelope({
+              customer: {
+                fullName: fullname,
+                email,
+                phone
+              },
+              cart,
+              paymentMethod: document.getElementById('paymentMethod').value,
+              discountCode: document.getElementById('discount').value.trim()
+            })
+          : { customer: { fullName: fullname, email, phone }, items: cart };
+
+        if (!checkoutEnvelope || checkoutEnvelope.isDuplicate) {
+          alert('Este pedido ya fue enviado o está en proceso. Evita duplicarlo, por favor.');
+          return;
+        }
+
+        writeCheckoutPayload(checkoutEnvelope);
+
+        if (globalThis.cyberduck) {
+          globalThis.cyberduck.persistPendingOrder(checkoutEnvelope.orderPayload);
         }
 
         // Show loading indicator and disable button
@@ -156,10 +258,37 @@
           if (response.ok) {
             // Success: hide loading, show message, clear cart and form, redirect
             if(loadingIndicator) loadingIndicator.style.display = 'none';
-            alert('¡Compra exitosa! Gracias por tu pedido.');
+            if (globalThis.cyberduck) {
+              globalThis.cyberduck.markCheckoutSubmissionCompleted(
+                checkoutEnvelope.submissionFingerprint,
+                checkoutEnvelope.orderPayload.orderId,
+                checkoutEnvelope.orderPayload.orderId
+              );
+            }
+
+            const orderIdText = checkoutEnvelope && checkoutEnvelope.orderPayload ? checkoutEnvelope.orderPayload.orderId : 'Nuevo';
+            const subtotal = checkoutEnvelope && checkoutEnvelope.orderPayload && checkoutEnvelope.orderPayload.summary ? checkoutEnvelope.orderPayload.summary.subtotal : (totals.subtotal || 0);
+            const discountCodeStr = document.getElementById('discount').value.trim();
+            const paymentMethodStr = document.getElementById('paymentMethod').value;
+            
+            // Get creation time to start tracking response KPI
+            const createdAtISO = checkoutEnvelope && checkoutEnvelope.orderPayload ? checkoutEnvelope.orderPayload.createdAt : new Date().toISOString();
+            
+            let waMessage = `¡Hola! Acabo de hacer un pedido en Cyberduck. 🦆\n\n*Nombre:* ${fullname}\n*ID Pedido:* ${orderIdText}\n*Fecha/Hora de Creación:* ${createdAtISO}\n\n*Productos:*\n`;
+            cart.forEach(it => {
+              waMessage += `- ${it.quantity || 1}x ${it.name || 'Producto'}\n`;
+            });
+            if (discountCodeStr) {
+              waMessage += `\n*Código de descuento:* ${discountCodeStr}\n`;
+            }
+            waMessage += `\n*Total estimado:* $${Number(subtotal).toLocaleString('es-CO')} COP\n*Método de pago:* ${paymentMethodStr}\n\n¡Quedo atento/a para coordinar el pago y la entrega!`;
+            
+            const waUrl = `https://wa.me/573108182572?text=${encodeURIComponent(waMessage)}`;
+
+            alert('¡Compra exitosa! Serás redirigido a WhatsApp para confirmar tu pedido. El tiempo de respuesta es clave para nosotros.');
             localStorage.removeItem('cyberduck:cart');
             form.reset();
-            window.location.href = './index.html';
+            globalThis.location.href = waUrl;
           } else {
             throw new Error('Error en el envío del pedido');
           }

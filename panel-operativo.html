@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CYBERDUCK — Panel operativo</title>
+  <meta name="description" content="Panel operativo diario: stock disponible, consumo por orden, APU, margen y alertas." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700;800&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+
+  <style>
+    .ops-main { padding: 18px 0 36px; }
+    .ops-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .ops-title {
+      margin: 0;
+      font-family: Oxanium, Inter, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: clamp(22px, 3.2vw, 34px);
+    }
+    .ops-subtitle { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+
+    .ops-actions { display: flex; gap: 8px; }
+
+    .ops-kpis {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .ops-kpi {
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      padding: 14px;
+    }
+    .ops-kpi__label {
+      margin: 0 0 8px;
+      font-family: Oxanium, Inter, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .ops-kpi__value {
+      margin: 0;
+      font-weight: 900;
+      font-size: clamp(20px, 2.5vw, 28px);
+      line-height: 1;
+    }
+    .ops-kpi__hint {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .ops-layout {
+      display: grid;
+      grid-template-columns: 1.4fr .9fr;
+      gap: 12px;
+    }
+    .ops-card {
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      box-shadow: 0 8px 24px rgba(0,0,0,.35);
+      overflow: hidden;
+    }
+    .ops-card__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+    .ops-card__title {
+      margin: 0;
+      font-family: Oxanium, Inter, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      font-size: 12px;
+    }
+    .ops-card__body { padding: 10px 12px 12px; }
+
+    .ops-table-wrap { overflow: auto; }
+    .ops-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+      font-size: 12px;
+    }
+    .ops-table th,
+    .ops-table td {
+      text-align: left;
+      padding: 8px 8px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      vertical-align: top;
+    }
+    .ops-table th {
+      font-family: Oxanium, Inter, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: 10px;
+      color: var(--muted);
+      position: sticky;
+      top: 0;
+      background: rgba(11,13,18,.92);
+    }
+
+    .ops-pill {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+    }
+    .ops-pill--ok { color: #d6ffe5; border-color: rgba(116,246,160,.52); background: rgba(20,80,42,.46); }
+    .ops-pill--warn { color: #fff3c8; border-color: rgba(255,224,129,.52); background: rgba(98,76,22,.5); }
+    .ops-pill--critical { color: #ffd7d7; border-color: rgba(255,143,143,.55); background: rgba(96,28,28,.52); }
+
+    .ops-alerts { display: grid; gap: 8px; }
+    .ops-alert {
+      border: 1px solid rgba(255,255,255,.1);
+      border-left-width: 4px;
+      border-radius: 10px;
+      padding: 10px;
+      background: rgba(255,255,255,.02);
+    }
+    .ops-alert--critical { border-left-color: #ff6b6b; }
+    .ops-alert--warning { border-left-color: #ffd166; }
+    .ops-alert--info { border-left-color: #4dd0e1; }
+    .ops-alert__title { margin: 0 0 4px; font-size: 12px; font-weight: 800; }
+    .ops-alert__meta { margin: 0; color: var(--muted); font-size: 11px; }
+
+    .ops-stock-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 8px;
+    }
+    .ops-stock-item {
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 10px;
+      padding: 8px;
+      background: rgba(255,255,255,.02);
+      min-height: 84px;
+    }
+    .ops-stock-item__name { margin: 0 0 6px; font-size: 12px; font-weight: 700; }
+    .ops-stock-item__meta { margin: 0; color: var(--muted); font-size: 11px; }
+
+    .ops-empty {
+      border: 1px dashed rgba(255,255,255,.2);
+      border-radius: 10px;
+      padding: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    @media (max-width: 980px) {
+      .ops-layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container header__inner">
+      <div class="brand">
+        <a class="brand__logo-group" href="./index.html">
+          <img src="./imgs/logo.png" alt="Cyberduck logo" class="brand__img">
+          <div class="brand__logo">CYBERDUCK</div>
+        </a>
+        <nav class="nav" aria-label="navegación principal">
+          <a class="nav__link" href="./index.html">inicio</a>
+          <a class="nav__link" href="./checkout.html">checkout</a>
+          <a class="nav__link" href="./panel-operativo.html">panel operativo</a>
+          <a class="nav__custom" href="./personalizar.html">✨ personaliza tu 3D ✨</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="ops-main">
+    <div class="container">
+      <section class="ops-head">
+        <div>
+          <h1 class="ops-title">Panel de seguimiento operativo</h1>
+          <p class="ops-subtitle">Stock disponible, consumo por orden, APU, margen y alertas para operación diaria.</p>
+        </div>
+        <div class="ops-actions">
+          <button id="opsRunPilot" type="button" class="btn" style="border-color: var(--neonB); color: var(--neonB);">Ejecutar Piloto (3D)</button>
+          <button id="opsRefresh" type="button" class="btn btn--primary">Actualizar</button>
+        </div>
+      </section>
+
+      <section class="ops-kpis" id="opsKpis">
+        <article class="ops-kpi">
+          <p class="ops-kpi__label">Stock disponible total</p>
+          <p class="ops-kpi__value" id="kpiStockTotal">—</p>
+          <div class="ops-kpi__hint" id="kpiStockHint">—</div>
+        </article>
+        <article class="ops-kpi">
+          <p class="ops-kpi__label">Consumo real total</p>
+          <p class="ops-kpi__value" id="kpiConsumoTotal">—</p>
+          <div class="ops-kpi__hint" id="kpiConsumoHint">—</div>
+        </article>
+        <article class="ops-kpi">
+          <p class="ops-kpi__label">APU promedio</p>
+          <p class="ops-kpi__value" id="kpiApuPromedio">—</p>
+          <div class="ops-kpi__hint" id="kpiApuHint">—</div>
+        </article>
+        <article class="ops-kpi">
+          <p class="ops-kpi__label">Margen promedio</p>
+          <p class="ops-kpi__value" id="kpiMargenPromedio">—</p>
+          <div class="ops-kpi__hint" id="kpiMargenHint">—</div>
+        </article>
+      </section>
+
+      <section class="ops-layout">
+        <article class="ops-card">
+          <header class="ops-card__head">
+            <h2 class="ops-card__title">Consumo por orden (últimas 20)</h2>
+            <small id="opsOrdersCount" style="color:var(--muted);">0 órdenes</small>
+          </header>
+          <div class="ops-card__body ops-table-wrap">
+            <table class="ops-table" id="opsOrdersTable">
+              <thead>
+                <tr>
+                  <th>Orden</th>
+                  <th>Estado</th>
+                  <th>Consumo (g)</th>
+                  <th>Desviación</th>
+                  <th>APU</th>
+                  <th>Margen</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="ops-card">
+          <header class="ops-card__head">
+            <h2 class="ops-card__title">Alertas operativas</h2>
+            <small id="opsAlertsCount" style="color:var(--muted);">0 alertas</small>
+          </header>
+          <div class="ops-card__body">
+            <div id="opsAlerts" class="ops-alerts"></div>
+          </div>
+        </article>
+      </section>
+
+      <section class="ops-card" style="margin-top:12px;">
+        <header class="ops-card__head">
+          <h2 class="ops-card__title">Stock disponible por material (top 12 prioridad)</h2>
+          <small id="opsStockCount" style="color:var(--muted);">0 materiales</small>
+        </header>
+        <div class="ops-card__body">
+          <div id="opsStockGrid" class="ops-stock-grid"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="./script.js"></script>
+  <script>
+    (function () {
+      const MAX_ORDERS = 20;
+      const MAX_ALERTS = 15;
+      const MAX_STOCK_ITEMS = 12;
+
+      const formatCOP = (value) => {
+        const num = Number(value) || 0;
+        return `$${num.toLocaleString('es-CO')}`;
+      };
+
+      const formatNumber = (value, decimals = 2) => {
+        const num = Number(value);
+        if (!Number.isFinite(num)) return '—';
+        return num.toLocaleString('es-CO', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+      };
+
+      const safeRead = (key, fallback) => {
+        try {
+          const raw = localStorage.getItem(key);
+          return raw ? JSON.parse(raw) : fallback;
+        } catch (error) {
+          console.warn(`No se pudo leer ${key}`, error);
+          return fallback;
+        }
+      };
+
+      const getOrders = () => safeRead('cyberduck:orders', []);
+      const getProductionLogs = () => safeRead('cyberduck:productionLogs', []);
+      const getKpiReports = () => safeRead('cyberduck:kpiReports', []);
+      const getStockAlerts = () => safeRead('cyberduck:materialStockAlerts', []);
+
+      const getStockSnapshot = () => {
+        if (globalThis.cyberduck && typeof globalThis.cyberduck.getMaterialStockControlSnapshot === 'function') {
+          return globalThis.cyberduck.getMaterialStockControlSnapshot();
+        }
+        return { materials: [], priorities: [], alerts: [] };
+      };
+
+      const mapStatusPill = (status) => {
+        const normalized = String(status || '').toUpperCase();
+        if (normalized.includes('QUIEBRE') || normalized.includes('CRIT') || normalized.includes('NEGATIVO')) return 'critical';
+        if (normalized.includes('BAJO') || normalized.includes('WARNING') || normalized.includes('WARN')) return 'warn';
+        return 'ok';
+      };
+
+      const getVarianceClass = (variancePct) => {
+        if (Number.isFinite(variancePct) && variancePct > 10) {
+          return 'ops-pill--critical';
+        }
+        if (Number.isFinite(variancePct) && variancePct > 0) {
+          return 'ops-pill--warn';
+        }
+        return 'ops-pill--ok';
+      };
+
+      const getMarginClass = (marginPct) => {
+        if (Number.isFinite(marginPct) && marginPct < 0) {
+          return 'ops-pill--critical';
+        }
+        if (Number.isFinite(marginPct) && marginPct < 20) {
+          return 'ops-pill--warn';
+        }
+        return 'ops-pill--ok';
+      };
+
+      const getRecentOrdersView = () => {
+        const orders = getOrders();
+        const kpis = getKpiReports();
+        const kpiByOrder = new Map(kpis.map(item => [item.orderId, item]));
+
+        return orders
+          .slice()
+          .sort((a, b) => new Date(b.updatedAt || b.createdAt || 0).getTime() - new Date(a.updatedAt || a.createdAt || 0).getTime())
+          .slice(0, MAX_ORDERS)
+          .map(order => {
+            const kpi = kpiByOrder.get(order.orderId) || order.closeSummary?.kpis || null;
+            const consumption = kpi?.consumption || order.closeSummary?.consumption || {};
+            const margin = kpi?.margin || order.closeSummary?.margin || {};
+            const apu = kpi?.apu || order.closeSummary?.apu || {};
+
+            return {
+              orderId: order.orderId,
+              flowStatus: order.flowStatus || 'CREADA',
+              actualConsumptionSolid: Number(consumption.actualConsumptionSolid) || 0,
+              variancePct: Number(consumption.variancePct),
+              unitCost: Number(apu.unitCost),
+              marginPct: Number(margin.grossMarginPct),
+              marginValue: Number(margin.grossMargin)
+            };
+          });
+      };
+
+      const buildOperationalAlerts = () => {
+        const kpis = getKpiReports();
+        const stockAlerts = getStockAlerts();
+        const compiled = [];
+
+        stockAlerts.slice(-MAX_ALERTS).forEach(alert => {
+          compiled.push({
+            severity: String(alert.severity || '').toLowerCase() === 'critical' ? 'critical' : 'warning',
+            title: alert.message || `Alerta de stock ${alert.status || ''}`,
+            meta: `${alert.materialCode || 'N/A'} · Orden ${alert.orderId || 'N/A'} · ${alert.createdAt || ''}`
+          });
+        });
+
+        kpis.forEach(report => {
+          (report.alerts || []).forEach(alert => {
+            const isCostOutOfRange = alert.type === 'margin-negative' || alert.type === 'margin-low';
+            const isDeviation = alert.type === 'consumption-over-plan' || alert.type === 'consumption-out-of-range';
+            if (!isCostOutOfRange && !isDeviation) {
+              return;
+            }
+
+            compiled.push({
+              severity: String(alert.severity || '').toLowerCase() === 'critical' ? 'critical' : 'warning',
+              title: alert.message || `${alert.type || 'Alerta'} en ${report.orderId}`,
+              meta: `Orden ${report.orderId} · ${alert.scope || 'operación'} · valor ${alert.value ?? 'n/a'}`
+            });
+          });
+        });
+
+        return compiled
+          .sort((a, b) => (a.severity === 'critical' ? -1 : 1) - (b.severity === 'critical' ? -1 : 1))
+          .slice(0, MAX_ALERTS);
+      };
+
+      const renderKpis = () => {
+        const stockSnapshot = getStockSnapshot();
+        const productionLogs = getProductionLogs();
+        const kpis = getKpiReports();
+
+        const totalOnHand = (stockSnapshot.materials || []).reduce((acc, item) => acc + (Number(item.onHand) || 0), 0);
+        const lowOrBreak = (stockSnapshot.materials || []).filter(item => {
+          const status = String(item.status || '').toUpperCase();
+          return status === 'QUIEBRE' || status === 'BAJO_SEGURIDAD' || status === 'BAJO_MINIMO';
+        }).length;
+
+        const totalConsumed = productionLogs.reduce((acc, log) => acc + (Number(log.totals?.actual) || 0), 0);
+
+        const apuValues = kpis
+          .map(item => Number(item.apu?.unitCost))
+          .filter(value => Number.isFinite(value) && value > 0);
+        const marginValues = kpis
+          .map(item => Number(item.margin?.grossMarginPct))
+          .filter(value => Number.isFinite(value));
+
+        const apuAverage = apuValues.length ? (apuValues.reduce((a, b) => a + b, 0) / apuValues.length) : null;
+        const marginAverage = marginValues.length ? (marginValues.reduce((a, b) => a + b, 0) / marginValues.length) : null;
+
+        document.getElementById('kpiStockTotal').textContent = `${formatNumber(totalOnHand, 2)} g`;
+        document.getElementById('kpiStockHint').textContent = `${lowOrBreak} materiales en riesgo`;
+
+        document.getElementById('kpiConsumoTotal').textContent = `${formatNumber(totalConsumed, 2)} g`;
+        document.getElementById('kpiConsumoHint').textContent = `${productionLogs.length} registros de producción`;
+
+        document.getElementById('kpiApuPromedio').textContent = apuAverage === null ? '—' : formatCOP(apuAverage);
+        document.getElementById('kpiApuHint').textContent = `${apuValues.length} órdenes con APU`;
+
+        document.getElementById('kpiMargenPromedio').textContent = marginAverage === null ? '—' : `${formatNumber(marginAverage, 2)}%`;
+        document.getElementById('kpiMargenHint').textContent = `${marginValues.length} órdenes con margen`;
+      };
+
+      const renderOrders = () => {
+        const rows = getRecentOrdersView();
+        const tbody = document.querySelector('#opsOrdersTable tbody');
+        tbody.innerHTML = '';
+
+        document.getElementById('opsOrdersCount').textContent = `${rows.length} órdenes`;
+
+        if (rows.length === 0) {
+          const tr = document.createElement('tr');
+          const td = document.createElement('td');
+          td.colSpan = 6;
+          td.innerHTML = '<div class="ops-empty">Aún no hay órdenes registradas para mostrar.</div>';
+          tr.appendChild(td);
+          tbody.appendChild(tr);
+          return;
+        }
+
+        rows.forEach(row => {
+          const tr = document.createElement('tr');
+          const statusClass = mapStatusPill(row.flowStatus);
+          const varianceClass = getVarianceClass(row.variancePct);
+          const marginClass = getMarginClass(row.marginPct);
+
+          tr.innerHTML = `
+            <td><strong>${row.orderId || '—'}</strong></td>
+            <td><span class="ops-pill ops-pill--${statusClass}">${row.flowStatus || '—'}</span></td>
+            <td>${formatNumber(row.actualConsumptionSolid, 2)} g</td>
+            <td><span class="ops-pill ${varianceClass}">${Number.isFinite(row.variancePct) ? `${formatNumber(row.variancePct, 2)}%` : '—'}</span></td>
+            <td>${Number.isFinite(row.unitCost) ? formatCOP(row.unitCost) : '—'}</td>
+            <td>
+              <span class="ops-pill ${marginClass}">${Number.isFinite(row.marginPct) ? `${formatNumber(row.marginPct, 2)}%` : '—'}</span>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px;">${Number.isFinite(row.marginValue) ? formatCOP(row.marginValue) : ''}</div>
+            </td>
+          `;
+
+          tbody.appendChild(tr);
+        });
+      };
+
+      const renderAlerts = () => {
+        const alerts = buildOperationalAlerts();
+        const wrap = document.getElementById('opsAlerts');
+        wrap.innerHTML = '';
+        document.getElementById('opsAlertsCount').textContent = `${alerts.length} alertas`;
+
+        if (alerts.length === 0) {
+          wrap.innerHTML = '<div class="ops-empty">Sin alertas críticas o de costo fuera de rango. ✅</div>';
+          return;
+        }
+
+        alerts.forEach(alert => {
+          const div = document.createElement('article');
+          const severityClass = alert.severity === 'critical' ? 'critical' : 'warning';
+          div.className = `ops-alert ops-alert--${severityClass}`;
+          div.innerHTML = `
+            <p class="ops-alert__title">${alert.title}</p>
+            <p class="ops-alert__meta">${alert.meta}</p>
+          `;
+          wrap.appendChild(div);
+        });
+      };
+
+      const renderStock = () => {
+        const stockSnapshot = getStockSnapshot();
+        const priorities = stockSnapshot.priorities || [];
+        const materials = stockSnapshot.materials || [];
+        const byCode = new Map(materials.map(item => [item.materialCode, item]));
+
+        const top = priorities.slice(0, MAX_STOCK_ITEMS).map(item => {
+          const mapped = byCode.get(item.materialCode);
+          if (!mapped) {
+            return { ...item };
+          }
+          return {
+            ...item,
+            ...mapped
+          };
+        });
+
+        const grid = document.getElementById('opsStockGrid');
+        grid.innerHTML = '';
+        document.getElementById('opsStockCount').textContent = `${materials.length} materiales`;
+
+        if (top.length === 0) {
+          grid.innerHTML = '<div class="ops-empty">No hay datos de stock aún. Registra consumo de producción para poblar este panel.</div>';
+          return;
+        }
+
+        top.forEach(item => {
+          const statusClass = mapStatusPill(item.status || 'OK');
+          const el = document.createElement('article');
+          el.className = 'ops-stock-item';
+          el.innerHTML = `
+            <p class="ops-stock-item__name">${item.materialCode || 'N/A'} · ${item.materialName || 'Material'}</p>
+            <p class="ops-stock-item__meta">Disponible: <strong>${formatNumber(item.onHand, 2)} ${item.unit || 'g'}</strong></p>
+            <p class="ops-stock-item__meta">Min/Seg: ${formatNumber(item.minStock, 2)} / ${formatNumber(item.safetyStock, 2)}</p>
+            <p class="ops-stock-item__meta">Prioridad: <span class="ops-pill ops-pill--${statusClass}">${item.priority || item.status || 'OK'}</span></p>
+          `;
+          grid.appendChild(el);
+        });
+      };
+
+      const renderAll = () => {
+        renderKpis();
+        renderOrders();
+        renderAlerts();
+        renderStock();
+      };
+
+      document.getElementById('opsRefresh').addEventListener('click', renderAll);
+      document.getElementById('opsRunPilot').addEventListener('click', () => {
+        if(!confirm('Esto borrará los datos locales actuales y generará datos de prueba para la familia Impresión 3D. ¿Continuar?')) return;
+
+        ['cyberduck:orders', 'cyberduck:inventoryMovements', 'cyberduck:productionLogs', 'cyberduck:kpiReports', 'cyberduck:materialStock', 'cyberduck:materialStockPolicies', 'cyberduck:materialStockAlerts'].forEach(k => localStorage.removeItem(k));
+
+        cyberduck.upsertMaterialStockPolicy('MAT-3DP-PLA-BASIC', {
+          minStock: 800,
+          safetyStock: 1200,
+          maxStock: 3000,
+          unitCostCOP: 38
+        });
+
+        cyberduck.setMaterialStockLevel('MAT-3DP-PLA-BASIC', 1000, {
+          materialName: 'Filamento PLA',
+          unit: 'g'
+        });
+
+        const cart = [
+          { sku: 'CYB-3DP-0125', name: 'Creeper Articulado', category: 'impresion3d', quantity: 2, unitPrice: 8500 },
+          { sku: 'CYB-3DP-0126', name: 'Deadly Shark', category: 'impresion3d', quantity: 1, unitPrice: 8500 }
+        ];
+
+        const envelope = cyberduck.buildCheckoutSubmissionEnvelope({
+          customer: { fullName: 'Piloto Test', email: 'piloto@cyberduck.com', phone: '3001234567' },
+          cart: cart,
+          paymentMethod: 'nequi'
+        });
+
+        cyberduck.registerOrderFromCheckout(envelope.orderPayload);
+
+        const actualConsumption = [
+          { sku: 'CYB-3DP-0125', actualSolidUsed: 260 },
+          { sku: 'CYB-3DP-0126', actualSolidUsed: 130 }
+        ];
+        const actualCost = 390 * 38;
+
+        cyberduck.closeOrderWithConsumption(envelope.orderPayload.orderId, actualConsumption, {
+          operator: 'impresora-ender-3',
+          actualCost: actualCost
+        });
+
+        renderAll();
+        alert('Piloto ejecutado. Revisa los KPIs, el consumo por orden y las alertas.');
+      });
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+          renderAll();
+        }
+      });
+
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
