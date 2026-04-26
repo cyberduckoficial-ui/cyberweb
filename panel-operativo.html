@@ -172,8 +172,163 @@
       text-align: center;
     }
 
+    .ops-consumption-panel { margin: 12px 0; }
+    .ops-consumption-grid {
+      display: grid;
+      grid-template-columns: 1.3fr .8fr;
+      gap: 12px;
+    }
+    .ops-consumption-pane {
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.02);
+      padding: 12px;
+    }
+    .ops-consumption-pane__title {
+      margin: 0 0 12px;
+      font-family: Oxanium, Inter, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .ops-form {
+      display: grid;
+      gap: 12px;
+    }
+    .ops-form-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .ops-field {
+      display: grid;
+      gap: 6px;
+    }
+    .ops-field__label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .ops-input,
+    .ops-select,
+    .ops-textarea {
+      width: 100%;
+      box-sizing: border-box;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.03);
+      color: var(--text);
+      padding: 10px 12px;
+      font: inherit;
+      outline: none;
+    }
+    .ops-input:focus,
+    .ops-select:focus,
+    .ops-textarea:focus {
+      border-color: rgba(0, 255, 170, .55);
+      box-shadow: 0 0 0 3px rgba(0, 255, 170, .12);
+    }
+    .ops-select { appearance: none; }
+    .ops-textarea { resize: vertical; min-height: 84px; }
+    .ops-consumption-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 8px;
+    }
+    .ops-summary-tile {
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.025);
+      padding: 10px;
+    }
+    .ops-summary-tile__label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .ops-summary-tile__value {
+      display: block;
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1.1;
+    }
+    .ops-summary-tile__hint {
+      display: block;
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .ops-consumption-lines {
+      display: grid;
+      gap: 8px;
+    }
+    .ops-consumption-line {
+      display: grid;
+      grid-template-columns: minmax(160px, 1.05fr) minmax(150px, 1fr) minmax(130px, .75fr) minmax(140px, .85fr);
+      gap: 8px;
+      align-items: end;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 10px;
+      background: rgba(255,255,255,.02);
+      padding: 10px;
+    }
+    .ops-consumption-line__meta {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+    .ops-consumption-line__meta strong {
+      display: block;
+      color: var(--text);
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+    .ops-consumption-line[data-variance-tone="ok"] { border-color: rgba(116,246,160,.28); }
+    .ops-consumption-line[data-variance-tone="warn"] { border-color: rgba(255,209,102,.42); }
+    .ops-consumption-line[data-variance-tone="critical"] { border-color: rgba(255,107,107,.45); }
+    .ops-consumption-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .ops-consumption-message {
+      border-radius: 10px;
+      border: 1px dashed rgba(255,255,255,.2);
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--muted);
+      background: rgba(255,255,255,.02);
+    }
+    .ops-consumption-message[data-tone="ok"] { border-color: rgba(116,246,160,.4); color: #d6ffe5; }
+    .ops-consumption-message[data-tone="warning"] { border-color: rgba(255,209,102,.5); color: #fff3c8; }
+    .ops-consumption-message[data-tone="critical"] { border-color: rgba(255,107,107,.5); color: #ffd7d7; }
+    .ops-guidance-list {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+    .ops-guidance-list li + li { margin-top: 8px; }
+    .ops-guidance-note {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
     @media (max-width: 980px) {
       .ops-layout { grid-template-columns: 1fr; }
+      .ops-consumption-grid { grid-template-columns: 1fr; }
+      .ops-form-grid { grid-template-columns: 1fr; }
+      .ops-consumption-line { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -231,6 +386,68 @@
         </article>
       </section>
 
+      <section class="ops-card ops-consumption-panel">
+        <header class="ops-card__head">
+          <h2 class="ops-card__title">Registro de consumo real por orden</h2>
+          <small id="opsConsumptionCount" style="color:var(--muted);">0 órdenes abiertas</small>
+        </header>
+        <div class="ops-card__body ops-consumption-grid">
+          <article class="ops-consumption-pane">
+            <h3 class="ops-consumption-pane__title">Procesar y registrar</h3>
+            <form id="opsConsumptionForm" class="ops-form">
+              <div class="ops-form-grid">
+                <label class="ops-field">
+                  <span class="ops-field__label">Orden activa</span>
+                  <select id="opsConsumptionOrderSelect" class="ops-select"></select>
+                </label>
+                <label class="ops-field">
+                  <span class="ops-field__label">Operario</span>
+                  <input id="opsConsumptionOperator" class="ops-input" type="text" placeholder="Ej. impresora-ender-3" />
+                </label>
+                <label class="ops-field">
+                  <span class="ops-field__label">Lote / batch</span>
+                  <input id="opsConsumptionLotCode" class="ops-input" type="text" placeholder="Ej. LOTE-2026-04-26" />
+                </label>
+              </div>
+
+              <label class="ops-field">
+                <span class="ops-field__label">Notas de producción</span>
+                <textarea id="opsConsumptionNotes" class="ops-textarea" rows="3" placeholder="Soportes, reimpresiones, ajustes de máquina, incidencias, etc."></textarea>
+              </label>
+
+              <div id="opsConsumptionSummary" class="ops-consumption-summary"></div>
+
+              <div>
+                <h3 class="ops-consumption-pane__title" style="margin-bottom:8px;">Consumo real por SKU</h3>
+                <div id="opsConsumptionLines" class="ops-consumption-lines"></div>
+              </div>
+
+              <div class="ops-consumption-actions">
+                <button id="opsConsumptionSave" type="submit" class="btn btn--primary">Registrar consumo real</button>
+                <button id="opsConsumptionClose" type="button" class="btn">Registrar y cerrar orden</button>
+                <button id="opsConsumptionReset" type="button" class="btn">Reiniciar formulario</button>
+              </div>
+
+              <div id="opsConsumptionMessage" class="ops-consumption-message" data-tone="info">Selecciona una orden abierta para capturar el consumo real.</div>
+            </form>
+          </article>
+
+          <article class="ops-consumption-pane">
+            <h3 class="ops-consumption-pane__title">Cómo usarlo</h3>
+            <ul class="ops-guidance-list">
+              <li>Selecciona una orden en estado <strong>CREADA</strong> o <strong>EN_PRODUCCIÓN</strong>.</li>
+              <li>Revisa el consumo teórico y ajusta cada SKU con el material real usado.</li>
+              <li>Usa <strong>Registrar consumo real</strong> para dejar la orden en producción.</li>
+              <li>Usa <strong>Registrar y cerrar orden</strong> cuando el lote ya esté terminado y validado.</li>
+              <li>El panel recalcula alertas, APU y margen con el consumo reportado por el operario.</li>
+            </ul>
+            <p class="ops-guidance-note">
+              Consejo operativo: si una línea queda sin editar, el sistema la toma con el valor teórico para no bloquear el proceso.
+            </p>
+          </article>
+        </div>
+      </section>
+
       <section class="ops-layout">
         <article class="ops-card">
           <header class="ops-card__head">
@@ -283,6 +500,7 @@
       const MAX_ORDERS = 20;
       const MAX_ALERTS = 15;
       const MAX_STOCK_ITEMS = 12;
+      const OPEN_ORDER_STATUSES = new Set(['CREADA', 'EN_PRODUCCION']);
 
       const formatCOP = (value) => {
         const num = Number(value) || 0;
@@ -309,6 +527,61 @@
       const getProductionLogs = () => safeRead('cyberduck:productionLogs', []);
       const getKpiReports = () => safeRead('cyberduck:kpiReports', []);
       const getStockAlerts = () => safeRead('cyberduck:materialStockAlerts', []);
+
+      const RECOMMENDED_STOCK_POLICIES = [
+        { materialCode: 'MAT-3DP-PLA-BASIC', minStock: 800, safetyStock: 1200, maxStock: 3000, unitCostCOP: 38 },
+        { materialCode: 'MAT-3DP-PLA-CUSTOM', minStock: 500, safetyStock: 800, maxStock: 2200, unitCostCOP: 44 },
+        { materialCode: 'MAT-TXT-ALGODON-EST', minStock: 1200, safetyStock: 1600, maxStock: 4200, unitCostCOP: 52 },
+        { materialCode: 'MAT-TXT-POLY-BASIC', minStock: 1000, safetyStock: 1400, maxStock: 3800, unitCostCOP: 57 },
+        { materialCode: 'MAT-ACC-RESINA-METAL', minStock: 260, safetyStock: 340, maxStock: 900, unitCostCOP: 95 },
+        { materialCode: 'MAT-ACC-RESINA-COLLAR', minStock: 300, safetyStock: 420, maxStock: 1100, unitCostCOP: 92 },
+        { materialCode: 'MAT-ACC-RESINA-MANILLA', minStock: 260, safetyStock: 340, maxStock: 900, unitCostCOP: 90 },
+        { materialCode: 'MAT-ACC-RESINA-GARG', minStock: 220, safetyStock: 300, maxStock: 820, unitCostCOP: 98 },
+        { materialCode: 'MAT-ACC-MIX-OTROS', minStock: 450, safetyStock: 620, maxStock: 1600, unitCostCOP: 68 },
+        { materialCode: 'MAT-MIX-NUEVO', minStock: 480, safetyStock: 700, maxStock: 1800, unitCostCOP: 72 },
+        { materialCode: 'MAT-GEN-SOLIDO', minStock: 500, safetyStock: 650, maxStock: 1800, unitCostCOP: 60 }
+      ];
+
+      const escapeHtml = (value) => String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+
+      const toInputNumber = (value) => {
+        const num = Number(value);
+        return Number.isFinite(num) ? num.toFixed(2) : '';
+      };
+
+      const getOpenOrders = () => {
+        return getOrders()
+          .filter(order => OPEN_ORDER_STATUSES.has(String(order.flowStatus || '').toUpperCase()))
+          .sort((a, b) => new Date(b.updatedAt || b.createdAt || 0).getTime() - new Date(a.updatedAt || a.createdAt || 0).getTime())
+          .slice(0, MAX_ORDERS);
+      };
+
+      const ensureRecommendedStockPolicies = () => {
+        const api = globalThis.cyberduck || {};
+        if (typeof api.upsertMaterialStockPolicy !== 'function') {
+          return;
+        }
+
+        const currentPolicies = safeRead('cyberduck:materialStockPolicies', {});
+        RECOMMENDED_STOCK_POLICIES.forEach(policy => {
+          if (currentPolicies[policy.materialCode]) {
+            return;
+          }
+
+          api.upsertMaterialStockPolicy(policy.materialCode, {
+            minStock: policy.minStock,
+            safetyStock: policy.safetyStock,
+            maxStock: policy.maxStock,
+            reorderPoint: policy.minStock,
+            unitCostCOP: policy.unitCostCOP
+          });
+        });
+      };
 
       const getStockSnapshot = () => {
         if (globalThis.cyberduck && typeof globalThis.cyberduck.getMaterialStockControlSnapshot === 'function') {
@@ -342,6 +615,342 @@
           return 'ops-pill--warn';
         }
         return 'ops-pill--ok';
+      };
+
+      const getConsumptionOrderOptionLabel = (order) => {
+        const customerName = order.customer?.fullName || order.customer?.nombre || 'Cliente sin nombre';
+        const itemCount = Array.isArray(order.items) ? order.items.length : 0;
+        return `${order.orderId || '—'} · ${order.flowStatus || 'CREADA'} · ${customerName} · ${itemCount} SKU`;
+      };
+
+      const getConsumptionLineItems = (order) => {
+        return Array.isArray(order?.theoreticalConsumption) ? order.theoreticalConsumption : [];
+      };
+
+      const readConsumptionFormState = () => {
+        const orderId = document.getElementById('opsConsumptionOrderSelect')?.value || '';
+        const order = getOpenOrders().find(item => item.orderId === orderId) || null;
+        const lineElements = Array.from(document.querySelectorAll('[data-consumption-line]'));
+
+        const actualConsumption = lineElements.map(line => {
+          const sku = line.dataset.sku || '';
+          const input = line.querySelector('[data-consumption-input]');
+          const theoretical = Number(line.dataset.theoreticalSolid) || 0;
+          const quantity = Number(line.dataset.quantity) || 1;
+          const actual = Number.parseFloat(input?.value);
+
+          return {
+            sku,
+            productSku: sku,
+            productName: line.dataset.productName || sku,
+            category: line.dataset.category || '',
+            quantity,
+            expectedSolidUsed: theoretical,
+            actualSolidUsed: Number.isFinite(actual) ? actual : theoretical,
+            materialCode: line.dataset.materialCode || '',
+            materialName: line.dataset.materialName || '',
+            unit: line.dataset.unit || 'g'
+          };
+        }).filter(item => item.sku);
+
+        return {
+          order,
+          actualConsumption,
+          operator: document.getElementById('opsConsumptionOperator')?.value.trim() || 'sistema',
+          lotCode: document.getElementById('opsConsumptionLotCode')?.value.trim() || '',
+          notes: document.getElementById('opsConsumptionNotes')?.value.trim() || '',
+          lineValues: new Map(actualConsumption.map(item => [item.sku, item.actualSolidUsed]))
+        };
+      };
+
+      const setConsumptionMessage = (message, tone = 'info') => {
+        const wrap = document.getElementById('opsConsumptionMessage');
+        if (!wrap) return;
+        wrap.dataset.tone = tone;
+        wrap.textContent = message;
+      };
+
+      const getConsumptionPreviewStatus = (variancePct) => {
+        if (variancePct === null) {
+          return { tone: 'info', label: 'Pendiente' };
+        }
+
+        if (variancePct > 10) {
+          return { tone: 'critical', label: 'Sobreconsumo crítico' };
+        }
+
+        if (variancePct > 0) {
+          return { tone: 'warning', label: 'Sobreconsumo' };
+        }
+
+        return { tone: 'ok', label: 'OK' };
+      };
+
+      const getConsumptionVarianceTone = (variancePct) => {
+        if (variancePct === null) {
+          return 'info';
+        }
+
+        if (variancePct > 10) {
+          return 'critical';
+        }
+
+        if (variancePct > 0) {
+          return 'warn';
+        }
+
+        return 'ok';
+      };
+
+      const buildConsumptionPreviewMessage = (status, variancePct) => {
+        if (status.tone === 'info') {
+          return 'Selecciona una orden abierta para capturar el consumo real.';
+        }
+
+        const extra = variancePct > 0 ? ` de ${formatNumber(variancePct, 2)}%` : '';
+        return `Vista previa actualizada: ${status.label.toLowerCase()}${extra}.`;
+      };
+
+      const updateConsumptionLineIndicators = (actualConsumption) => {
+        const lineElements = Array.from(document.querySelectorAll('[data-consumption-line]'));
+
+        lineElements.forEach(line => {
+          const sku = line.dataset.sku || '';
+          const entry = actualConsumption.find(item => item.sku === sku);
+          const theoretical = Number(line.dataset.theoreticalSolid) || 0;
+          const actual = entry ? Number(entry.actualSolidUsed) || 0 : theoretical;
+          const variance = +(actual - theoretical).toFixed(2);
+          const variancePct = theoretical > 0 ? +((variance / theoretical) * 100).toFixed(2) : null;
+          const tone = getConsumptionVarianceTone(variancePct);
+
+          line.dataset.varianceTone = tone;
+
+          const varianceLabel = line.querySelector('[data-variance-label]');
+          if (varianceLabel) {
+            varianceLabel.textContent = variancePct === null ? '—' : `${formatNumber(variancePct, 2)}%`;
+          }
+
+          const varianceSolid = line.querySelector('[data-variance-solid]');
+          if (varianceSolid) {
+            varianceSolid.textContent = variancePct === null ? '—' : `${formatNumber(variance, 2)} g`;
+          }
+        });
+      };
+
+      const renderConsumptionSummary = () => {
+        const summaryWrap = document.getElementById('opsConsumptionSummary');
+        if (!summaryWrap) return;
+
+        const { order, actualConsumption } = readConsumptionFormState();
+        if (!order) {
+          summaryWrap.innerHTML = `
+            <div class="ops-summary-tile">
+              <span class="ops-summary-tile__label">Estado</span>
+              <span class="ops-summary-tile__value">Sin orden</span>
+              <span class="ops-summary-tile__hint">Selecciona una orden abierta para comenzar.</span>
+            </div>
+          `;
+          return;
+        }
+
+        const totalTheoretical = getConsumptionLineItems(order).reduce((acc, line) => acc + (Number(line.theoreticalSolid) || 0), 0);
+        const totalActual = actualConsumption.reduce((acc, line) => acc + (Number(line.actualSolidUsed) || 0), 0);
+        const variance = +(totalActual - totalTheoretical).toFixed(2);
+        const variancePct = totalTheoretical > 0 ? +((variance / totalTheoretical) * 100).toFixed(2) : null;
+        const overLines = actualConsumption.filter(line => (Number(line.actualSolidUsed) || 0) > (Number(line.expectedSolidUsed) || 0)).length;
+        const status = getConsumptionPreviewStatus(variancePct);
+
+        updateConsumptionLineIndicators(actualConsumption);
+
+        summaryWrap.innerHTML = `
+          <div class="ops-summary-tile">
+            <span class="ops-summary-tile__label">Orden</span>
+            <span class="ops-summary-tile__value" style="font-size:14px;">${escapeHtml(order.orderId || '—')}</span>
+            <span class="ops-summary-tile__hint">${escapeHtml(order.flowStatus || 'CREADA')} · ${escapeHtml(order.customer?.fullName || 'sin cliente')}</span>
+          </div>
+          <div class="ops-summary-tile">
+            <span class="ops-summary-tile__label">Teórico</span>
+            <span class="ops-summary-tile__value">${formatNumber(totalTheoretical, 2)} g</span>
+            <span class="ops-summary-tile__hint">Consumo planeado por BOM/receta</span>
+          </div>
+          <div class="ops-summary-tile">
+            <span class="ops-summary-tile__label">Real</span>
+            <span class="ops-summary-tile__value">${formatNumber(totalActual, 2)} g</span>
+            <span class="ops-summary-tile__hint">${overLines} líneas sobre teórico</span>
+          </div>
+          <div class="ops-summary-tile">
+            <span class="ops-summary-tile__label">Variación</span>
+            <span class="ops-summary-tile__value">${variancePct === null ? '—' : `${formatNumber(variancePct, 2)}%`}</span>
+            <span class="ops-summary-tile__hint">${status.label} · ${formatNumber(variance, 2)} g</span>
+          </div>
+        `;
+
+        setConsumptionMessage(buildConsumptionPreviewMessage(status, variancePct), status.tone);
+      };
+
+      const renderConsumptionLines = (restoredState = null) => {
+        const wrap = document.getElementById('opsConsumptionLines');
+        const select = document.getElementById('opsConsumptionOrderSelect');
+        if (!wrap || !select) return;
+
+        const selectedOrder = getOpenOrders().find(order => order.orderId === select.value) || getOpenOrders()[0] || null;
+        if (!selectedOrder) {
+          wrap.innerHTML = '<div class="ops-empty">No hay órdenes abiertas para capturar. Ejecuta el checkout o abre una orden en producción primero.</div>';
+          return;
+        }
+
+        const rows = getConsumptionLineItems(selectedOrder);
+        if (!rows.length) {
+          wrap.innerHTML = '<div class="ops-empty">La orden no tiene líneas teóricas disponibles para registrar consumo.</div>';
+          return;
+        }
+
+        wrap.innerHTML = rows.map((line, index) => {
+          const sku = line.sku || line.productSku || `SKU-${index + 1}`;
+          const theoretical = Number(line.theoreticalSolid) || 0;
+          const quantity = Number(line.quantity) || 1;
+          const productName = line.name || line.productName || 'Producto';
+          const category = line.category || '';
+          const unit = line.unit || 'g';
+          const materialCode = line.materialCode || '';
+          const materialName = line.materialName || '';
+          return `
+            <article class="ops-consumption-line" data-consumption-line data-sku="${escapeHtml(sku)}" data-theoretical-solid="${theoretical}" data-quantity="${quantity}" data-product-name="${escapeHtml(productName)}" data-category="${escapeHtml(category)}" data-material-code="${escapeHtml(materialCode)}" data-material-name="${escapeHtml(materialName)}" data-unit="${escapeHtml(unit)}">
+              <div class="ops-consumption-line__meta">
+                <strong>${escapeHtml(sku)}</strong>
+                ${escapeHtml(productName)}
+                <div style="margin-top:4px;">Categoría: ${escapeHtml(category || 'sin categoría')}</div>
+              </div>
+              <div class="ops-consumption-line__meta">
+                <strong>Consumo planificado</strong>
+                ${formatNumber(theoretical, 2)} g · ${quantity} unidad(es)
+              </div>
+              <label class="ops-field">
+                <span class="ops-field__label">Consumo real (${escapeHtml(unit)})</span>
+                <input class="ops-input" data-consumption-input type="number" min="0" step="0.01" inputmode="decimal" value="${toInputNumber(restoredState?.lineValues?.get(sku) ?? theoretical)}" />
+              </label>
+              <div class="ops-consumption-line__meta">
+                <strong>Variación</strong>
+                <span data-variance-label>${formatNumber(0, 2)}%</span>
+                <div style="margin-top:4px;" data-variance-solid>${formatNumber(0, 2)} g</div>
+              </div>
+            </article>
+          `;
+        }).join('');
+
+        wrap.querySelectorAll('[data-consumption-input]').forEach(input => {
+          input.addEventListener('input', renderConsumptionSummary);
+        });
+
+        renderConsumptionSummary();
+      };
+
+      const renderConsumptionModule = (restoredState = null) => {
+        const orders = getOpenOrders();
+        const select = document.getElementById('opsConsumptionOrderSelect');
+        const operatorInput = document.getElementById('opsConsumptionOperator');
+        const lotCodeInput = document.getElementById('opsConsumptionLotCode');
+        const notesInput = document.getElementById('opsConsumptionNotes');
+        const saveButton = document.getElementById('opsConsumptionSave');
+        const closeButton = document.getElementById('opsConsumptionClose');
+        const resetButton = document.getElementById('opsConsumptionReset');
+        const count = document.getElementById('opsConsumptionCount');
+
+        if (!select || !operatorInput || !lotCodeInput || !notesInput || !saveButton || !closeButton || !resetButton || !count) {
+          return;
+        }
+
+        count.textContent = `${orders.length} órdenes abiertas`;
+
+        const currentValue = select.value || select.dataset.selectedOrderId || '';
+        select.innerHTML = '';
+
+        if (orders.length === 0) {
+          select.innerHTML = '<option value="">Sin órdenes abiertas</option>';
+          select.disabled = true;
+          operatorInput.disabled = true;
+          lotCodeInput.disabled = true;
+          notesInput.disabled = true;
+          saveButton.disabled = true;
+          closeButton.disabled = true;
+          resetButton.disabled = true;
+          document.getElementById('opsConsumptionLines').innerHTML = '<div class="ops-empty">No hay órdenes abiertas para capturar consumo real.</div>';
+          renderConsumptionSummary();
+          return;
+        }
+
+        select.disabled = false;
+        operatorInput.disabled = false;
+        lotCodeInput.disabled = false;
+        notesInput.disabled = false;
+        saveButton.disabled = false;
+        closeButton.disabled = false;
+        resetButton.disabled = false;
+
+        orders.forEach(order => {
+          const option = document.createElement('option');
+          option.value = order.orderId;
+          option.textContent = getConsumptionOrderOptionLabel(order);
+          select.appendChild(option);
+        });
+
+        const selectedOrderId = orders.some(order => order.orderId === currentValue) ? currentValue : orders[0].orderId;
+        select.value = selectedOrderId;
+        select.dataset.selectedOrderId = selectedOrderId;
+
+        const selectedOrder = orders.find(order => order.orderId === selectedOrderId) || orders[0];
+        operatorInput.value = restoredState?.operator || selectedOrder?.production?.operator || operatorInput.value || 'sistema';
+        lotCodeInput.value = restoredState?.lotCode || selectedOrder?.production?.lotCode || selectedOrder?.closeSummary?.lotCode || lotCodeInput.value || '';
+        notesInput.value = restoredState?.notes || selectedOrder?.production?.notes || notesInput.value || '';
+
+        renderConsumptionLines(restoredState);
+      };
+
+      const submitConsumptionAction = (shouldClose = false) => {
+        const { order, actualConsumption, operator, lotCode, notes } = readConsumptionFormState();
+        if (!order) {
+          setConsumptionMessage('No hay una orden abierta seleccionada.', 'warning');
+          return;
+        }
+
+        const api = globalThis.cyberduck || {};
+        const action = shouldClose ? api.closeOrderWithConsumption : api.registerProductionConsumption;
+        if (typeof action !== 'function') {
+          setConsumptionMessage('La API de producción no está disponible todavía.', 'critical');
+          return;
+        }
+
+        if (!actualConsumption.length) {
+          setConsumptionMessage('La orden no tiene líneas para registrar consumo.', 'warning');
+          return;
+        }
+
+        const result = action(order.orderId, actualConsumption, {
+          operator,
+          lotCode,
+          lotId: lotCode,
+          notes,
+          productionAt: new Date().toISOString()
+        });
+
+        if (!result) {
+          setConsumptionMessage('No fue posible guardar el consumo de producción.', 'critical');
+          return;
+        }
+
+        const statusTone = shouldClose ? 'ok' : 'warning';
+        const actualText = actualConsumption.reduce((acc, line) => acc + (Number(line.actualSolidUsed) || 0), 0);
+        const successMessage = shouldClose
+          ? `Orden ${order.orderId} cerrada con consumo real (${formatNumber(actualText, 2)} g).`
+          : `Consumo real registrado para la orden ${order.orderId} (${formatNumber(actualText, 2)} g).`;
+
+        const preservedState = readConsumptionFormState();
+        renderKpis();
+        renderOrders();
+        renderAlerts();
+        renderStock();
+        renderConsumptionModule(preservedState);
+        setConsumptionMessage(successMessage, statusTone);
       };
 
       const getRecentOrdersView = () => {
@@ -544,11 +1153,33 @@
       };
 
       const renderAll = () => {
+        ensureRecommendedStockPolicies();
         renderKpis();
+        renderConsumptionModule();
         renderOrders();
         renderAlerts();
         renderStock();
       };
+
+      document.getElementById('opsConsumptionOrderSelect').addEventListener('change', () => {
+        const selected = document.getElementById('opsConsumptionOrderSelect').value || '';
+        document.getElementById('opsConsumptionOrderSelect').dataset.selectedOrderId = selected;
+        renderConsumptionLines();
+      });
+
+      document.getElementById('opsConsumptionForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+        submitConsumptionAction(false);
+      });
+
+      document.getElementById('opsConsumptionClose').addEventListener('click', () => {
+        submitConsumptionAction(true);
+      });
+
+      document.getElementById('opsConsumptionReset').addEventListener('click', () => {
+        renderConsumptionModule();
+        setConsumptionMessage('Formulario reiniciado con la orden seleccionada.', 'info');
+      });
 
       document.getElementById('opsRefresh').addEventListener('click', renderAll);
       document.getElementById('opsRunPilot').addEventListener('click', () => {

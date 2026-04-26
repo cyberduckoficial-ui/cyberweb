@@ -16,6 +16,7 @@ const MATERIAL_STOCK_ALERTS_KEY = 'cyberduck:materialStockAlerts';
 const ACCOUNTING_LEDGER_KEY = 'cyberduck:accountingLedger';
 const ACCOUNTING_SYNC_QUEUE_KEY = 'cyberduck:accountingSyncQueue';
 const ACCOUNTING_RECONCILIATIONS_KEY = 'cyberduck:accountingReconciliations';
+const ACCOUNTING_SYNC_BRIDGE_CONFIG_KEY = 'cyberduck:accountingSyncBridgeConfig';
 
 const CATEGORY_SOLID_GRAMS = {
   camisetas: 220,
@@ -593,11 +594,325 @@ function markAccountingMovementSynced(syncId, metadata = {}) {
   };
 
   safeWriteJsonStorage(ACCOUNTING_SYNC_QUEUE_KEY, queue);
+
+  const movement = queue[index];
+  const ledger = getAccountingLedgerEntries();
+  const explicitEntryId = metadata.entryId
+    || movement?.payload?.entryId
+    || movement?.payload?.accountingEntryId
+    || '';
+  const movementType = String(movement?.movementType || '').trim().toUpperCase();
+  const orderId = String(movement?.orderId || '').trim();
+  let ledgerIndex = explicitEntryId
+    ? ledger.findIndex(item => item.entryId === explicitEntryId)
+    : -1;
+
+  if (ledgerIndex < 0 && movementType && orderId) {
+    ledgerIndex = ledger.findIndex(item => String(item.entryType || '').toUpperCase() === movementType && String(item.orderId || '') === orderId);
+  }
+
+  if (ledgerIndex >= 0) {
+    ledger[ledgerIndex] = {
+      ...ledger[ledgerIndex],
+      status: 'SYNCED',
+      syncedAt: queue[index].syncedAt,
+      externalReference: queue[index].externalReference || ledger[ledgerIndex].externalReference || '',
+      updatedAt: new Date().toISOString()
+    };
+    safeWriteJsonStorage(ACCOUNTING_LEDGER_KEY, ledger);
+  }
+
   return queue[index];
 }
 
 function getPendingAccountingSyncMovements() {
   return getAccountingSyncQueue().filter(item => item.status !== 'SYNCED');
+}
+
+const ACCOUNTING_SYNC_ALLOWED_TYPES = new Set(['SALE', 'INVENTORY_OUT', 'COGS']);
+const ACCOUNTING_SYNC_BRIDGE_DEFAULTS = {
+  endpoint: '',
+  apiKey: '',
+  intervalMs: 2 * 60 * 1000,
+  timeoutMs: 15000,
+  batchSize: 20,
+  runImmediately: true
+};
+
+let accountingSyncBridgeIntervalId = null;
+let accountingSyncBridgeInFlight = false;
+let accountingSyncBridgeState = {
+  isRunning: false,
+  lastRunAt: null,
+  lastResult: null,
+  lastError: null,
+  intervalMs: ACCOUNTING_SYNC_BRIDGE_DEFAULTS.intervalMs
+};
+
+function getAccountingSyncBridgeConfig() {
+  return safeReadJsonStorage(ACCOUNTING_SYNC_BRIDGE_CONFIG_KEY, { ...ACCOUNTING_SYNC_BRIDGE_DEFAULTS });
+}
+
+function upsertAccountingSyncBridgeConfig(config = {}) {
+  const current = getAccountingSyncBridgeConfig();
+  const normalized = {
+    ...current,
+    ...config,
+    endpoint: String(config.endpoint ?? current.endpoint ?? '').trim(),
+    apiKey: String(config.apiKey ?? current.apiKey ?? '').trim(),
+    intervalMs: Math.max(15000, Number(config.intervalMs ?? current.intervalMs ?? ACCOUNTING_SYNC_BRIDGE_DEFAULTS.intervalMs) || ACCOUNTING_SYNC_BRIDGE_DEFAULTS.intervalMs),
+    timeoutMs: Math.max(3000, Number(config.timeoutMs ?? current.timeoutMs ?? ACCOUNTING_SYNC_BRIDGE_DEFAULTS.timeoutMs) || ACCOUNTING_SYNC_BRIDGE_DEFAULTS.timeoutMs),
+    batchSize: Math.max(1, Number(config.batchSize ?? current.batchSize ?? ACCOUNTING_SYNC_BRIDGE_DEFAULTS.batchSize) || ACCOUNTING_SYNC_BRIDGE_DEFAULTS.batchSize),
+    runImmediately: config.runImmediately === undefined ? (current.runImmediately ?? true) : Boolean(config.runImmediately)
+  };
+
+  safeWriteJsonStorage(ACCOUNTING_SYNC_BRIDGE_CONFIG_KEY, normalized);
+  return normalized;
+}
+
+function resolveAccountingSyncBridgeConfig(options = {}) {
+  return upsertAccountingSyncBridgeConfig({
+    ...ACCOUNTING_SYNC_BRIDGE_DEFAULTS,
+    ...getAccountingSyncBridgeConfig(),
+    ...options
+  });
+}
+
+function shouldSyncMovement(movement) {
+  const movementType = String(movement?.movementType || '').trim().toUpperCase();
+  return ACCOUNTING_SYNC_ALLOWED_TYPES.has(movementType);
+}
+
+async function sendAccountingMovementToEndpoint(movement, config = {}) {
+  const endpoint = String(config.endpoint || '').trim();
+  if (!endpoint) {
+    return {
+      ok: false,
+      syncId: movement.syncId,
+      error: 'missing-endpoint'
+    };
+  }
+
+  const controller = typeof AbortController === 'function' ? new AbortController() : null;
+  const timeoutId = controller
+    ? setTimeout(() => controller.abort(), Math.max(3000, Number(config.timeoutMs) || ACCOUNTING_SYNC_BRIDGE_DEFAULTS.timeoutMs))
+    : null;
+
+  try {
+    const requestPayload = {
+      source: 'cyberweb',
+      sentAt: new Date().toISOString(),
+      movement
+    };
+
+    if (config.apiKey) {
+      requestPayload.apiKey = config.apiKey;
+    }
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestPayload),
+      signal: controller ? controller.signal : undefined
+    });
+
+    let payload = null;
+    try {
+      payload = await response.json();
+    } catch {
+      payload = null;
+    }
+
+    if (!response.ok) {
+      return {
+        ok: false,
+        syncId: movement.syncId,
+        status: response.status,
+        payload,
+        error: `http-${response.status}`
+      };
+    }
+
+    if (payload?.ok === false) {
+      return {
+        ok: false,
+        syncId: movement.syncId,
+        payload,
+        error: payload?.error || 'erp-rejected'
+      };
+    }
+
+    const externalReference = String(
+      payload?.externalReference
+      || payload?.erpId
+      || payload?.id
+      || payload?.movementId
+      || `ERP-${movement.syncId}`
+    );
+
+    const entryId = movement?.payload?.entryId || movement?.payload?.accountingEntryId || '';
+    markAccountingMovementSynced(movement.syncId, {
+      entryId,
+      externalReference,
+      response: payload || { ok: true }
+    });
+
+    return {
+      ok: true,
+      syncId: movement.syncId,
+      externalReference,
+      payload
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      syncId: movement.syncId,
+      error: error?.name === 'AbortError' ? 'timeout' : String(error?.message || error)
+    };
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
+async function syncPendingAccountingMovements(options = {}) {
+  const config = resolveAccountingSyncBridgeConfig(options);
+  if (!config.endpoint) {
+    return {
+      ok: false,
+      reason: 'missing-endpoint',
+      attempted: 0,
+      synced: 0,
+      failed: 0,
+      failures: []
+    };
+  }
+
+  const pending = getPendingAccountingSyncMovements()
+    .filter(shouldSyncMovement)
+    .sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime())
+    .slice(0, config.batchSize);
+
+  const failures = [];
+  let synced = 0;
+
+  for (const movement of pending) {
+    const result = await sendAccountingMovementToEndpoint(movement, config);
+    if (result.ok) {
+      synced += 1;
+    } else {
+      failures.push(result);
+    }
+  }
+
+  buildAccountingReconciliationSnapshot({ scope: 'erp-sync' });
+
+  return {
+    ok: failures.length === 0,
+    attempted: pending.length,
+    synced,
+    failed: failures.length,
+    failures
+  };
+}
+
+async function runAccountingSyncBridgeCycle(options = {}) {
+  if (accountingSyncBridgeInFlight) {
+    return {
+      ok: false,
+      skipped: true,
+      reason: 'in-flight'
+    };
+  }
+
+  accountingSyncBridgeInFlight = true;
+  try {
+    const result = await syncPendingAccountingMovements(options);
+    accountingSyncBridgeState.lastRunAt = new Date().toISOString();
+    accountingSyncBridgeState.lastResult = result;
+    accountingSyncBridgeState.lastError = result.ok ? null : result.reason || (result.failures?.[0]?.error || null);
+    return result;
+  } catch (error) {
+    accountingSyncBridgeState.lastRunAt = new Date().toISOString();
+    accountingSyncBridgeState.lastError = String(error?.message || error);
+    return {
+      ok: false,
+      error: accountingSyncBridgeState.lastError
+    };
+  } finally {
+    accountingSyncBridgeInFlight = false;
+  }
+}
+
+function startAccountingSyncBridge(options = {}) {
+  const config = resolveAccountingSyncBridgeConfig(options);
+  if (!config.endpoint) {
+    return {
+      started: false,
+      reason: 'missing-endpoint',
+      config
+    };
+  }
+
+  if (accountingSyncBridgeIntervalId) {
+    clearInterval(accountingSyncBridgeIntervalId);
+  }
+
+  accountingSyncBridgeState = {
+    ...accountingSyncBridgeState,
+    isRunning: true,
+    intervalMs: config.intervalMs,
+    lastError: null
+  };
+
+  if (config.runImmediately) {
+    runAccountingSyncBridgeCycle(config).catch(error => {
+      console.warn('Error en ciclo inmediato de sincronización contable:', error);
+    });
+  }
+
+  accountingSyncBridgeIntervalId = setInterval(() => {
+    runAccountingSyncBridgeCycle(config).catch(error => {
+      console.warn('Error en sincronización contable programada:', error);
+    });
+  }, config.intervalMs);
+
+  return {
+    started: true,
+    intervalMs: config.intervalMs,
+    batchSize: config.batchSize,
+    endpoint: config.endpoint
+  };
+}
+
+function stopAccountingSyncBridge() {
+  if (accountingSyncBridgeIntervalId) {
+    clearInterval(accountingSyncBridgeIntervalId);
+    accountingSyncBridgeIntervalId = null;
+  }
+
+  accountingSyncBridgeState = {
+    ...accountingSyncBridgeState,
+    isRunning: false
+  };
+
+  return {
+    stopped: true,
+    lastRunAt: accountingSyncBridgeState.lastRunAt,
+    lastError: accountingSyncBridgeState.lastError
+  };
+}
+
+function getAccountingSyncBridgeState() {
+  return {
+    ...accountingSyncBridgeState,
+    inFlight: accountingSyncBridgeInFlight,
+    pending: getPendingAccountingSyncMovements().filter(shouldSyncMovement).length,
+    config: getAccountingSyncBridgeConfig()
+  };
 }
 
 function formatRowsToCsv(rows = [], headers = []) {
@@ -1085,6 +1400,59 @@ function applyMaterialStockControl(movements = [], context = {}) {
     alerts,
     priorities,
     generatedAt: new Date().toISOString()
+  };
+}
+
+function buildMarginImpactAlertFromConsumption(order, entries = [], context = {}) {
+  if (!order || !Array.isArray(entries) || entries.length === 0) {
+    return null;
+  }
+
+  const saleTotal = Number(order.summary?.subtotal) || 0;
+  if (saleTotal <= 0) {
+    return null;
+  }
+
+  const overconsumptionCostCOP = entries.reduce((acc, entry) => {
+    const varianceSolid = Number(entry.varianceSolid);
+    if (!Number.isFinite(varianceSolid) || varianceSolid <= 0) {
+      return acc;
+    }
+
+    const unitCost = Number(entry.estimatedUnitCostCOP) || 0;
+    if (!Number.isFinite(unitCost) || unitCost <= 0) {
+      return acc;
+    }
+
+    return acc + (varianceSolid * unitCost);
+  }, 0);
+
+  if (overconsumptionCostCOP <= 0) {
+    return null;
+  }
+
+  const projectedMarginCOP = +(saleTotal - overconsumptionCostCOP).toFixed(2);
+  const impactPct = +((overconsumptionCostCOP / saleTotal) * 100).toFixed(2);
+  const projectedMarginPct = +((projectedMarginCOP / saleTotal) * 100).toFixed(2);
+
+  if (impactPct < 5) {
+    return null;
+  }
+
+  const severity = impactPct >= 10 || projectedMarginPct < 25 ? 'critical' : 'warning';
+
+  return {
+    type: 'margin-impact-overconsumption',
+    severity,
+    scope: 'orden',
+    orderId: context.orderId || order.orderId,
+    movementBatchId: context.movementBatchId,
+    operator: context.operator,
+    overconsumptionCostCOP: +overconsumptionCostCOP.toFixed(2),
+    impactPct,
+    projectedMarginCOP,
+    projectedMarginPct,
+    message: `Sobreconsumo con impacto estimado de ${impactPct.toFixed(2)}% sobre la venta de la orden ${context.orderId || order.orderId}`
   };
 }
 
@@ -1751,10 +2119,46 @@ function registerProductionConsumption(orderRef, actualConsumption = [], options
     movementBatchId,
     operator: normalizedInput.operator
   });
+  const totalMaterialCostCOP = +movements.reduce((acc, line) => {
+    if (Number.isFinite(line.materialCostImpact)) {
+      return acc + Number(line.materialCostImpact);
+    }
+
+    return acc + ((Number(line.actualSolidUsed) || 0) * (Number(line.estimatedUnitCostCOP) || 0));
+  }, 0).toFixed(2);
+
+  const marginImpactAlert = buildMarginImpactAlertFromConsumption(order, movements, {
+    orderId: order.orderId,
+    movementBatchId,
+    operator: normalizedInput.operator
+  });
+  if (marginImpactAlert) {
+    stockControl.alerts = Array.isArray(stockControl.alerts)
+      ? [...stockControl.alerts, marginImpactAlert]
+      : [marginImpactAlert];
+    upsertMaterialStockAlert(marginImpactAlert);
+  }
 
   const inventoryMovements = safeReadJsonStorage(INVENTORY_MOVEMENTS_KEY, []);
   inventoryMovements.push(...movements);
   safeWriteJsonStorage(INVENTORY_MOVEMENTS_KEY, inventoryMovements);
+
+  const inventoryOutEntry = {
+    entryId: `ACC-${order.orderId}-INVOUT`,
+    orderId: order.orderId,
+    entryType: 'INVENTORY_OUT',
+    accountCode: '143500-INVENTARIO-SALIDA',
+    description: `Salida inventario orden ${order.orderId}`,
+    amountCOP: getOrderInventoryOutCost(order),
+    quantity: Number(order.summary?.quantity) || 0,
+    currency: order.currency || 'COP',
+    source: 'produccion',
+    happenedAt: normalizedInput.producedAt,
+    movementBatchId,
+    status: 'PENDING_SYNC',
+    createdAt: new Date().toISOString()
+  };
+  upsertAccountingLedgerEntries([inventoryOutEntry]);
 
   const productionLogs = safeReadJsonStorage(PRODUCTION_LOGS_KEY, []);
   const totals = report ? {
@@ -1794,13 +2198,8 @@ function registerProductionConsumption(orderRef, actualConsumption = [], options
       movementBatchId,
       producedAt: normalizedInput.producedAt,
       operator: normalizedInput.operator,
-      totalMaterialCostCOP: +movements.reduce((acc, line) => {
-        if (Number.isFinite(line.materialCostImpact)) {
-          return acc + Number(line.materialCostImpact);
-        }
-
-        return acc + ((Number(line.actualSolidUsed) || 0) * (Number(line.estimatedUnitCostCOP) || 0));
-      }, 0).toFixed(2),
+      totalMaterialCostCOP,
+      accountingEntryId: inventoryOutEntry.entryId,
       lines: movements
     }
   }]);
@@ -1842,7 +2241,8 @@ function registerProductionConsumption(orderRef, actualConsumption = [], options
     totals,
     report,
     stockControl,
-    lines: movements
+    lines: movements,
+    actualCost: totalMaterialCostCOP
   };
 }
 
@@ -1858,6 +2258,11 @@ function closeOrderWithConsumption(orderRef, actualConsumption = [], options = {
     return null;
   }
 
+  const derivedActualCost = Number(productionResult.actualCost) || Number(productionResult.totalMaterialCostCOP) || null;
+  const actualCost = Number.isFinite(normalizeCurrencyValue(options.actualCost))
+    ? normalizeCurrencyValue(options.actualCost)
+    : derivedActualCost;
+
   const closeSummary = {
     closedAt,
     theoreticalSolid: productionResult.totals.theoretical,
@@ -1868,12 +2273,13 @@ function closeOrderWithConsumption(orderRef, actualConsumption = [], options = {
     lotId: productionResult.lotId || null,
     lotCode: productionResult.lotCode || null,
     operator: productionResult.operator || null,
-    report: productionResult.report || null
+    report: productionResult.report || null,
+    actualCost: Number.isFinite(actualCost) ? +Number(actualCost).toFixed(2) : null
   };
 
   const kpis = computeOrderKPIs(order, {
     actualConsumption,
-    actualCost: options.actualCost,
+    actualCost: Number.isFinite(actualCost) ? actualCost : options.actualCost,
     consumptionReport: productionResult.report || null
   });
 
@@ -2084,6 +2490,12 @@ globalThis.cyberduck = {
   getAccountingSyncQueue,
   getPendingAccountingSyncMovements,
   markAccountingMovementSynced,
+  getAccountingSyncBridgeConfig,
+  upsertAccountingSyncBridgeConfig,
+  syncPendingAccountingMovements,
+  startAccountingSyncBridge,
+  stopAccountingSyncBridge,
+  getAccountingSyncBridgeState,
   buildAccountingReconciliationSnapshot,
   cachedFetch,
   optimizeImageUrl,
