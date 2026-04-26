@@ -144,12 +144,13 @@
     if (all.length > MAX_SESSIONS) all.splice(0, all.length - MAX_SESSIONS);
     safeWrite(ANALYTICS_KEY, all);
 
-    // Sesión → Sheet
+    // Sesión → Sheet (no-cors evita el preflight que bloquea Apps Script)
     fetch(ANALYTICS_ENDPOINT, {
       method: 'POST',
       body: JSON.stringify({ type: 'session', data: buildSessionPayload() }),
-      headers: { 'Content-Type': 'application/json' },
-      keepalive: true
+      headers: { 'Content-Type': 'text/plain' },
+      keepalive: true,
+      mode: 'no-cors'
     }).catch(() => {});
 
     // Eventos → Sheet
@@ -158,8 +159,9 @@
       fetch(ANALYTICS_ENDPOINT, {
         method: 'POST',
         body: JSON.stringify({ type: 'events', data: evs }),
-        headers: { 'Content-Type': 'application/json' },
-        keepalive: true
+        headers: { 'Content-Type': 'text/plain' },
+        keepalive: true,
+        mode: 'no-cors'
       }).catch(() => {});
     }
   }
